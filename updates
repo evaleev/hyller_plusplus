@@ -1,0 +1,2 @@
+
+2006-05-11	Initial C++ version. Very experimental at the moment. Can do 1S SCF. Need new integrals to compute MPn. CI part is commented out.
