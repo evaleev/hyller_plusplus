@@ -1,0 +1,33 @@
+default: (
+    label = "hyller"
+    iprint = 1
+  files: (
+         default: (
+                  name = "hyller"
+                  nvolume = 1
+                  volume1 = "/scratch/evaleev/"
+                  )
+         file30: ( nvolume = 1 volume1 = "./" )
+         )
+)
+
+hylleraas:(
+   calc = hylleraas
+   %calc = kinoshita
+   mult = 1
+   root = 0
+   %zopt = true
+   %zeta = 3.375
+   %zeta= 5.2322
+   zeta = 3.5
+   charge = 2.0
+
+   cusp_plot = true
+   radius = 1.0
+   np_cusp = 100
+   psinorm = false
+
+   pd_plot = false
+   range = 3.0
+   np_pd = 300
+)
