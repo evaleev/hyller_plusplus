@@ -204,4 +204,130 @@ double Overlap(const CSF& bfi, const CSF& bfj)
   }
 }
 
+////
+
+namespace {
+
+  // computes integral of function r1^i r2^j r12^k exp(-zeta1*r1) exp(-zeta2*r2)
+  double I(double zeta1, double zeta2, int i, int j, int k)
+  {
+    const double sixteenpi2 = 16.0 * M_PI;
+    const int ki = k+i;
+    const int kij = k+i+j;
+    const double zeta12 = zeta1+zeta2;
+
+    double result = 0.0;
+    for(int p=1; p<=k+2; p+=2) {
+      const double pfac = binomial(k+2,p);
+      const int jp = j+p+1;
+      const int kip = ki-p+3;
+      const double term1 = fac(jp+1)*fac(ki+3-p)/(pow(zeta1,ki+4-p)*pow(zeta2,jp+2));
+
+      double term2 = 0.0;
+      for(int l=0; l<=jp; l++) {
+	term2 += fac(kij+4-l)/(pow(zeta12,kij+5-l) * fac(jp-l) * pow(zeta2,l+1));
+      }
+      term2 *= fac(jp);
+
+      double term3 = 0.0;
+      for(int l=0; l<=kip; l++) {
+	term3 += fac(kij+4-l) / (pow(zeta12,kij+5-l) * fac(kip-l) * pow(zeta2,l+1));
+      }
+      term3 *= fac(kip);
+
+      result += pfac * (term1 - term2 + term3);
+    }
+
+    result *= sixteenpi2 / (k+2);
+    return result;
+  }
 };
+
+double normConst(const GenHylleraasBasisFunction& bfi)
+{
+  const double Sijij = I(2.0*bfi.zeta1,
+			 2.0*bfi.zeta2,
+			 2*bfi.i,
+			 2*bfi.j,
+			 2*bfi.k);
+  const double Sijji = I(2.0*bfi.zeta1,
+			 2.0*bfi.zeta2,
+			 2*bfi.i,
+			 2*bfi.j,
+			 2*bfi.k);
+  const double S = (bfi.spin == SpinSinglet) ? 2.0*(Sijij+Sijji) : 2.0*(Sijij-Sijji);
+  return 1.0/std::sqrt(S);
+}
+
+double
+Overlap(const GenHylleraasBasisFunction& bfi,
+	const GenHylleraasBasisFunction& bfj)
+{
+  if (bfi.spin != bfj.spin) 
+    return 0.0;
+  const double Sijij = I(bfi.zeta1+bfj.zeta1,
+			 bfi.zeta2+bfj.zeta2,
+			 bfi.i+bfj.i,
+			 bfi.j+bfj.j,
+			 bfi.k+bfj.k);
+  const double Sijji = I(bfi.zeta1+bfj.zeta2,
+			 bfi.zeta2+bfj.zeta1,
+			 bfi.i+bfj.j,
+			 bfi.j+bfj.i,
+			 bfi.k+bfj.k);
+  const double S = (bfi.spin == SpinSinglet) ? 2.0*(Sijij+Sijji) : 2.0*(Sijij-Sijji);
+  const double norm_pfac = normConst(bfi)*normConst(bfj);
+  return S * norm_pfac;
+}
+
+double
+V_en(const GenHylleraasBasisFunction& bfi,
+     const GenHylleraasBasisFunction& bfj)
+{
+  if (bfi.spin != bfj.spin)
+    return 0.0;
+  double V = 0.0;
+  const GenHylleraasBasisFunction* bf1;
+  const GenHylleraasBasisFunction* bf2;
+  if (bfi.i < bfj.i) {
+    bf1 = &bfi; bf2 = &bfj;
+  }
+  else {
+    bf1 = &bfj; bf2 = &bfi;
+  }
+  {
+    GenHylleraasBasisFunction bf22(bf2->spin,bf2->i-1,bf2->j,bf2->k,bf2->zeta1,bf2->zeta2);
+    V += normConst(*bf2) * Overlap(*bf1,bf22) / normConst(bf22);
+  }
+  if (bfi.j < bfj.j) {
+    bf1 = &bfi; bf2 = &bfj;
+  }
+  else {
+    bf1 = &bfj; bf2 = &bfi;
+  }
+  {
+    GenHylleraasBasisFunction bf22(bf2->spin,bf2->i,bf2->j-1,bf2->k,bf2->zeta1,bf2->zeta2);
+    V += normConst(*bf2) * Overlap(*bf1,bf22) / normConst(bf22);
+  }
+  return V;
+}
+
+double
+V_ee(const GenHylleraasBasisFunction& bfi,
+     const GenHylleraasBasisFunction& bfj)
+{
+  if (bfi.spin != bfj.spin)
+    return 0.0;
+  const GenHylleraasBasisFunction* bf1;
+  const GenHylleraasBasisFunction* bf2;
+  if (bfi.k < bfj.k) {
+    bf1 = &bfi; bf2 = &bfj;
+  }
+  else {
+    bf1 = &bfj; bf2 = &bfi;
+  }
+  GenHylleraasBasisFunction bf22(bf2->spin,bf2->i,bf2->j,bf2->k-1,bf2->zeta1,bf2->zeta2);
+  return normConst(*bf2) * Overlap(*bf1,bf22) / normConst(bf22);
+}
+
+};  // namespace hyller

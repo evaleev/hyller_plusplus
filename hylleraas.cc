@@ -6,7 +6,7 @@
 using namespace hyller;
 
 HylleraasBasisFunction::HylleraasBasisFunction() :
-  n(0), l(0), m(0), zeta(0.0) {}
+  n(-1), l(-1), m(-1), zeta(-1.0) {}
 
 HylleraasBasisFunction::HylleraasBasisFunction(int nn, int ll, int mm, double zz) :
   n(nn), l(ll), m(mm), zeta(zz) { if (zeta <= 0.0) throw std::runtime_error("HylleraasBasisFunction::HylleraasBasisFunction -- nonpositive zeta"); }
@@ -102,4 +102,74 @@ HylleraasWfn::HylleraasWfn(const HylleraasBasisSet& bs, const std::vector<double
 {
   if (bs_.num_bf() != coefs_.size())
     throw std::runtime_error("HylleraasWfn::HylleraasWfn -- size of basis set and coefficient vector do not match");
+}
+
+////
+
+GenHylleraasBasisFunction::GenHylleraasBasisFunction() :
+  i(-1), j(-1), k(-1), zeta1(-1.0), zeta2(-1.0), spin(SpinSinglet)
+{
+}
+
+GenHylleraasBasisFunction::GenHylleraasBasisFunction(Spin2 s, int ii, int jj, int kk, double zz1, double zz2) :
+  i(ii), j(jj), k(kk), zeta1(zz1), zeta2(zz2), spin(s)
+{
+  if (zeta1 <= 0.0)
+    throw std::runtime_error("GenHylleraasBasisFunction::GenHylleraasBasisFunction -- nonpositive zeta1");
+  if (zeta2 <= 0.0)
+    throw std::runtime_error("GenHylleraasBasisFunction::GenHylleraasBasisFunction -- nonpositive zeta2");
+}
+
+bool
+hyller::operator==(const GenHylleraasBasisFunction& A, const GenHylleraasBasisFunction& B)
+{
+  return (A.spin==B.spin && A.i==B.i && A.j==B.j && A.k==B.k && A.zeta1==B.zeta1 && A.zeta2==B.zeta2);
+}
+
+GenHylleraasBasisSet::GenHylleraasBasisSet(Spin2 spin, int ijk_max, int i_max, int j_max, int k_max, double zeta1, double zeta2) :
+  bfs_(0), spin_(spin), ijk_max_(ijk_max), i_max_(i_max), j_max_(j_max), k_max_(k_max), zeta1_(zeta1), zeta2_(zeta2)
+{
+  bfs_.reserve(expected_num_bf);
+
+  /// iterate over basis functions, given the constraints
+  for(int i=0;i<=ijk_max;i++)
+    for(int j=0;j<=ijk_max-i;j++)
+      for(int k=0;k<=ijk_max-i-j;k++) {
+	if (i > i_max || j > j_max || k > k_max || i < j)
+            continue;
+        
+	GenHylleraasBasisFunction bf(spin_,i,j,k,zeta1_,zeta2_);
+	bfs_.push_back(bf);
+      }
+}
+
+void
+GenHylleraasBasisSet::set_zeta1(double zeta)
+{
+  if (zeta <= 0.0)
+    throw std::runtime_error("GenHylleraasBasisSet::set_zeta1 -- zeta must be positive");
+  zeta1_ = zeta;
+  const int nbf = bfs_.size();
+  for(int i=0; i<nbf; i++)
+    bfs_[i].zeta1 = zeta1_;
+}
+
+void
+GenHylleraasBasisSet::set_zeta2(double zeta)
+{
+  if (zeta <= 0.0)
+    throw std::runtime_error("GenHylleraasBasisSet::set_zeta2 -- zeta must be positive");
+  zeta2_ = zeta;
+  const int nbf = bfs_.size();
+  for(int i=0; i<nbf; i++)
+    bfs_[i].zeta2 = zeta2_;
+}
+
+int
+GenHylleraasBasisSet::find(const GenHylleraasBasisFunction& bf) const
+{
+  std::vector<GenHylleraasBasisFunction>::const_iterator result = std::find(bfs_.begin(),bfs_.end(),bf);
+  if (result == bfs_.end())
+    throw BasisFunctionNotFound();
+  return result - bfs_.begin();
 }

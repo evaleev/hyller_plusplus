@@ -3,6 +3,7 @@
 #define _hyller_matrix_h_
 
 #include "hylleraas.h"
+#include "slaterhylleraas.h"
 #include "orbital.h"
 #include "determinant.h"
 #include "csf.h"
@@ -22,6 +23,19 @@ namespace hyller {
 	   const HylleraasBasisFunction& bfj);
   double density_Nuc(const HylleraasBasisFunction& bfi,
 		     const HylleraasBasisFunction& bfj);
+
+  /**
+     matrix elements in nonsymmetric Hylleraas basis (i.e. in terms of r1, r2, and r12)
+  */
+  double normConst(const GenHylleraasBasisFunction& bf);
+  double Overlap(const GenHylleraasBasisFunction& bfi,
+		 const GenHylleraasBasisFunction& bfj);
+  double V_en(const GenHylleraasBasisFunction& bfi,
+	      const GenHylleraasBasisFunction& bfj);
+  double V_ee(const GenHylleraasBasisFunction& bfi,
+	      const GenHylleraasBasisFunction& bfj);
+  double T(const GenHylleraasBasisFunction& bfi,
+	   const GenHylleraasBasisFunction& bfj);
 
   /**
      matrix elements in Slater-Hylleraas basis

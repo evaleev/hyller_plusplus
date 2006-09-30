@@ -55,6 +55,21 @@ namespace hyller {
     double** X_;
   };
 
+  /// Projector from GenHylleraas to Hylleraas
+  class GenHylleraas_2_Hylleraas {
+  public:
+    GenHylleraas_2_Hylleraas(const GenHylleraasBasisSet& sbs, const HylleraasBasisSet& cbs);
+    ~GenHylleraas_2_Hylleraas();
+
+    /// Returns Hylleraas functions expanded in GenHylleraas functions
+    double** X() const { return X_; }
+
+  private:
+    const GenHylleraasBasisSet& gbs_;
+    const HylleraasBasisSet& hbs_;
+    double** X_;
+  };
+
 };
 
 #endif

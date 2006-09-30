@@ -3,11 +3,10 @@
 #define _hyller_csf_h_
 
 #include <vector>
+#include "spin.h"
 #include "determinant.h"
 
 namespace hyller {
-
-  typedef enum {SpinSinglet = 1, SpinTriplet = 3} Spin2;
 
   /// Configuration State Function for 2 electrons
   struct CSF {

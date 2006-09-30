@@ -3,6 +3,7 @@
 #include "projector.h"
 #include "matrix.h"
 #include "except.h"
+#include "misc.h"
 
 extern "C" FILE* outfile;
 
@@ -201,4 +202,56 @@ SD_2_CSF::SD_2_CSF(const SDBasisSet& sbs, const CSFBasisSet& cbs) :
 SD_2_CSF::~SD_2_CSF()
 {
   free_block(X_);
+}
+
+////
+
+GenHylleraas_2_Hylleraas::GenHylleraas_2_Hylleraas(const GenHylleraasBasisSet& gbs, const HylleraasBasisSet& hbs) :
+  gbs_(gbs), hbs_(hbs)
+{
+  if ((gbs_.spin() == SpinSinglet)^ hbs_.singlet())
+    throw std::runtime_error("GenHylleraas_2_Hylleraas::GenHylleraas_2_Hylleraas -- different spin cases");
+
+  const int nghyll = gbs_.num_bf();
+  const int nhyll = hbs_.num_bf();
+  fprintf(outfile,"\n\tNumber of GenHylleraas  = %d\n", nghyll);
+  fprintf(outfile,"\n\tNumber of Hylleraas = %d\n", nhyll);
+
+  // expansion coefficient for Hylleraas in terms of GenHylleraas
+  X_ = block_matrix(nhyll,nghyll);
+
+  // contributions from i,j functions
+  double** ijcoeff = new double*[hbs_.nlm_max()];
+  for(int i=0; i<hbs_.nlm_max(); i++) {
+    ijcoeff[i] = new double[hbs_.nlm_max()];
+  }
+  
+  for(int k=0; k<nhyll; ++k) {
+    const HylleraasBasisFunction& h = hbs_.bf(k);
+    for(int i=0; i<h.n+h.l; i++) {
+      for(int j=0; j<h.n+h.l; j++) {
+	ijcoeff[i][j] = 0.0;
+      }
+    }
+    const double hnorm = normConst(h);
+    for(int i1=0; i1<h.n; i1++) {
+      for(int i2=0; i2<h.l; i2++) {
+	GenHylleraasBasisFunction g(gbs_.spin(),i1+i2,h.n+h.l-i1-i2,h.m,h.zeta,h.zeta);
+	ijcoeff[i1+i2][h.n+h.l-i1-i2] += binomial(h.n,i1) * binomial(h.l,i2) * pow(-1.0,h.l-i2) * normConst(g) / hnorm;
+      }
+    }
+
+    for(int i=0; i<h.n+h.l; i++) {
+      for(int j=0; j<=i; j++) {
+	if (fabs(fabs(ijcoeff[i][j]) - fabs(ijcoeff[i][j])) > 1.0e-12)
+	  throw std::runtime_error("GenHylleraas_2_Hylleraas::GenHylleraas_2_Hylleraas -- coefficients of spin-components are nor equal");
+	GenHylleraasBasisFunction g(gbs_.spin(),i,j,h.m,h.zeta,h.zeta);
+	const int ii = gbs_.find(g);
+	X_[k][ii] = ijcoeff[i][j];
+      }
+    }
+
+  }
+  fprintf(outfile,"\t Hylleraas functions (in rows) expressed in terms of GenHylleraas functions\n");
+  print_mat(X_,nhyll,nghyll,outfile);
 }

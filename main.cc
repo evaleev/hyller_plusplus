@@ -430,12 +430,15 @@ solvCi(HylleraasBasisSet& basis, double Z, int root_num, bool opt, double thresh
 	const HylleraasBasisFunction& bfj = basis.bf(j);
 
 	double Hij = T(bfi,bfj);
+	
 	Hij += Z*V_en(bfi,bfj)/2.0;
 	Hij += V_ee(bfi,bfj);
-
+	
 	H[j][i] = H[i][j] = Hij;
       }
     }
+    fprintf(outfile,"\tHamiltonian matrix\n");
+    print_mat(H,nbf,nbf,outfile);
     
     temp = block_matrix(nbf,indDim);
     

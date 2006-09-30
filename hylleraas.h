@@ -3,10 +3,11 @@
 #define _hyller_hylleraas_h_
 
 #include <vector>
+#include "spin.h"
 
 namespace hyller {
 
-  /// A Hylleraas-type basis function
+  /// A single-exponent Hylleraas-type basis function
   struct HylleraasBasisFunction {
     /// Construct a dummy function
     HylleraasBasisFunction();
@@ -79,6 +80,69 @@ namespace hyller {
     const HylleraasBasisSet& bs_;
     std::vector<double> coefs_;
   };
+
+  ////
+
+  /// A double-exponent Hylleraas-type basis function: (r1^i r2^j exp(-zeta1 r1) exp(-zeta2 r2) +- r1^j r2^i exp(-zeta2 r1) exp(-zeta1 r2)) r12^k, where '+' is for singlets, '-' is for triplet
+  struct GenHylleraasBasisFunction {
+    /// Construct a dummy function
+    GenHylleraasBasisFunction();
+    /// Construct a GenHylleraas basis function
+    GenHylleraasBasisFunction(Spin2 s, int i, int j, int k, double zeta1, double zeta2);
+    ~GenHylleraasBasisFunction() {}
+    Spin2 spin;
+    int i;
+    int j;
+    int k;
+    // zeta is not necessary at the moment, but may be useful in the future
+    double zeta1;
+    double zeta2;
+
+  };
+
+  /// Comparison operator
+  bool operator==(const GenHylleraasBasisFunction& A, const GenHylleraasBasisFunction& B);
+
+  /// A GenHylleraas basis set
+  class GenHylleraasBasisSet {
+  public:
+    /// Constructs a GenHylleraas-type basis set, given the parameters and restrictions
+    GenHylleraasBasisSet(Spin2 spin, int ijk_max, int i_max, int j_max, int k_max, double zeta1, double zeta2);
+    ~GenHylleraasBasisSet() {}
+
+    /// Return spin
+    Spin2 spin() const { return spin_; }
+    /// maximum i+j+k value
+    int ijk_max() const { return ijk_max_; }
+    int i_max() const { return i_max_; }
+    int j_max() const { return j_max_; }
+    int k_max() const { return k_max_; }
+    double zeta1() const { return zeta1_; }
+    double zeta2() const { return zeta2_; }
+    void set_zeta1(double zeta);
+    void set_zeta2(double zeta);
+
+    /// The number of basis functions
+    int num_bf() const { return bfs_.size(); }
+    /// ith basis function
+    const GenHylleraasBasisFunction& bf(int i) const { return bfs_.at(i); }
+    /// find this basis function and return its index. Throw, if not found
+    int find(const GenHylleraasBasisFunction& bf) const;
+    
+  private:
+    /** maximum number of basis functions to expect. More can be handled without a problem,
+	but memory will be reallocated */
+    const static unsigned int expected_num_bf = 10000;
+    std::vector<GenHylleraasBasisFunction> bfs_;
+    Spin2 spin_;
+    int ijk_max_;
+    int i_max_;
+    int j_max_;
+    int k_max_;
+    double zeta1_;
+    double zeta2_;
+  };
+  
 
 };
 
