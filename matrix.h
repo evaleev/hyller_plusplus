@@ -24,6 +24,21 @@ namespace hyller {
 		     const HylleraasBasisFunction& bfj);
 
   /**
+     matrix elements in Slater-Hylleraas basis
+   */
+  /// The elementary integral is the integral over whole space of the given function without the Jacobian!
+  double I(const SlaterHylleraasBasisFunction& bf);
+  double normConst(const SlaterHylleraasBasisFunction& bf);
+  double Overlap(const SlaterHylleraasBasisFunction& bfi,
+		 const SlaterHylleraasBasisFunction& bfj);
+  double V_en(const SlaterHylleraasBasisFunction& bfi,
+	      const SlaterHylleraasBasisFunction& bfj);
+  double V_ee(const SlaterHylleraasBasisFunction& bfi,
+	      const SlaterHylleraasBasisFunction& bfj);
+  double T(const SlaterHylleraasBasisFunction& bfi,
+	   const SlaterHylleraasBasisFunction& bfj);
+
+  /**
      matrix elements in orbital basis phi(r,i,z) = r^i e^(-zr)
    */
   /// Normalization constant for phi(i,z)

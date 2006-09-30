@@ -1,5 +1,6 @@
 # site-specific variables loaded first
-PSIROOT = /Users/evaleev/Development/QuantumChemistry/psi3/recent/ppc-osx-gcc34
+PSIROOT = /home/evaleev/Development/psi3/recent/x86-linux-gcc41
+GSLPATH = /usr/local
 
 # CODE = $(shell basename `pwd`)
 CODE = hyller++
@@ -9,11 +10,11 @@ vpath %.a $(PSIROOT)/lib
 CFLAGS = -g
 CXXFLAGS = -g
 
-LIBS = -lPSI_ciomr -lPSI_ipv1 -lm
-LIBSPATH = -L$(PSIROOT)/lib
-INCLUDES = -I$(PSIROOT)/include -I.
+LIBS = -lPSI_ciomr -lPSI_ipv1 -lgsl -lgslcblas -lm
+LIBSPATH = -L$(PSIROOT)/lib -L$(GSLPATH)/lib
+INCLUDES = -I$(PSIROOT)/include -I$(GSLPATH)/include/gsl -I.
 
-CXXSRC = main.cc matrix.cc polynom.cc misc.cc hylleraas.cc orbital.cc \
+CXXSRC = main.cc matrix.cc polynom.cc misc.cc hylleraas.cc slaterhylleraas.cc orbital.cc \
 projector.cc determinant.cc csf.cc except.cc
 CXXOBJ = $(CXXSRC:%.cc=%.o)
 
