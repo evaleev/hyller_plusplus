@@ -97,6 +97,9 @@ namespace hyller {
       This function is not symmetry-adapted.
   */
   struct GenSlaterHylleraasBasisFunction {
+    /// Regular coordinates are used
+    static const int Coords = Coordinates::R1R2R12;
+
     /// Construct a dummy function
     GenSlaterHylleraasBasisFunction();
     /// Construct a Hylleraas basis function
@@ -126,9 +129,6 @@ namespace hyller {
   /// Basis set of generalized Slater-Hylleraas-type functions
   class GenSlaterHylleraasBasisSet {
   public:
-    /// Regular coordinates are used
-    enum {Coords = Coordinates::R1R2R12};
-
     /// Constructs a generalized Slater-Hylleraas-type basis set, given the parameters and restrictions
     GenSlaterHylleraasBasisSet(int ijk_max, int ijk_min, int ij_max, int k_max, double alpha, double beta, double gamma);
     ~GenSlaterHylleraasBasisSet() {}

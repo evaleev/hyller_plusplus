@@ -38,6 +38,8 @@ namespace {
   OrbitalWfn& solvHF(OrbitalBasisSet& basis, HylleraasBasisSet& hbs, double Z, double threshold, int maxiter, bool opt, int maxiter_zeta);
   void eigensolve(int nbf, int indDim, double** H, double** X, int root, double& E, std::vector<double>& coeff);
   void usage();
+
+  void test_gsh();
 }
 
 int main(int argc, char **argv)
@@ -248,30 +250,7 @@ int main(int argc, char **argv)
   /*----------------------
     Test various features
    ----------------------*/
-  // Test matrix elements over generalized Slater-Hylleraas functions
-  {
-    const int m = 11;
-    const double zeta = 3.0;
-    std::cout << "Testing matrix elements of GenSlaterHylleraasBasisFunction (m=" << m <<")" << std::endl;
-    HylleraasBasisFunction H00m(0,0,m,zeta);
-    const double S_ref = Overlap(H00m,H00m);
-    const double uS_ref = S_ref / (normConst(H00m) * normConst(H00m));
-    const double Ven_ref = V_en(H00m,H00m);
-    const double Vee_ref = V_ee(H00m,H00m);
-    const double T_ref = T(H00m,H00m);
-    GenSlaterHylleraasBasisFunction GSH00m(0,0,m,0.5*zeta,0.5*zeta,0.0);
-    const double us = S(GSH00m,GSH00m);
-    const double s = us * NormConst(GSH00m) * NormConst(GSH00m);
-    const double v_en = 2.0*V_ne(GSH00m,GSH00m) * NormConst(GSH00m) * NormConst(GSH00m);
-    const double v_ee = V_ee(GSH00m,GSH00m) * NormConst(GSH00m) * NormConst(GSH00m);
-    const double t = T(GSH00m,GSH00m) * NormConst(GSH00m) * NormConst(GSH00m);
-    //std::cout << "Unnorm: S(ref) = " << uS_ref << "   S = " << us << std::endl;
-    std::cout << "S(ref) = " << S_ref << "   S = " << s << std::endl;
-    std::cout << "Ven(ref) = " << Ven_ref << "   Ven = " << v_en << std::endl;
-    std::cout << "Vee(ref) = " << Vee_ref << "   Vee = " << v_ee << std::endl;
-    std::cout << "T(ref) = " << T_ref << "   T = " << t << std::endl;
-  }
-  
+  test_gsh();
 
   tstop(outfile);
   ip_done();
@@ -1007,6 +986,92 @@ usage() {
   fprintf(stderr,"           lmax - upper limit of l (power of r1-r2)\n");
   fprintf(stderr,"           mmax - upper limit of m (power of r12)\n");
   fprintf(stderr,"           max  - upper limit of n+l+m\n");
+}
+
+
+void test_gsh()
+{
+  // Test matrix elements over generalized Slater-Hylleraas functions
+  {
+    const int m = 1;
+    const double zeta = 3.375;
+    const double gamma = 0.0;
+    std::cout << "Testing matrix elements of GenSlaterHylleraasBasisFunction (m=" << m <<")" << std::endl;
+    HylleraasBasisFunction H000(0,0,0,zeta);
+    HylleraasBasisFunction H00m(0,0,m,zeta);
+    const double S_ref = Overlap(H00m,H00m);
+    const double uS_ref = S_ref / (normConst(H00m) * normConst(H00m));
+    const double Ven_ref = V_en(H00m,H00m);
+    const double Vee_ref = V_ee(H00m,H00m);
+    const double T0m_ref = T(H000,H00m);
+    const double Tm0_ref = T(H00m,H000);
+    const double Tmm_ref = T(H00m,H00m);
+    GenSlaterHylleraasBasisFunction GSH000(0,0,0,0.5*zeta,0.5*zeta,gamma);
+    GenSlaterHylleraasBasisFunction GSH00m(0,0,m,0.5*zeta,0.5*zeta,gamma);
+    const double us = S(GSH00m,GSH00m);
+    const double s = us * NormConst(GSH00m) * NormConst(GSH00m);
+    const double v_en = 2.0*V_ne(GSH00m,GSH00m) * NormConst(GSH00m) * NormConst(GSH00m);
+    const double v_ee = V_ee(GSH00m,GSH00m) * NormConst(GSH00m) * NormConst(GSH00m);
+    const double t0m = T(GSH000,GSH00m) * NormConst(GSH000) * NormConst(GSH00m);
+    const double tm0 = T(GSH00m,GSH000) * NormConst(GSH00m) * NormConst(GSH000);
+    const double tmm = T(GSH00m,GSH00m) * NormConst(GSH00m) * NormConst(GSH00m);
+    std::cout << "Unnorm: S(ref) = " << uS_ref << "   S = " << us << std::endl;
+    std::cout << "S(ref) = " << S_ref << "   S = " << s << std::endl;
+    std::cout << "Ven(ref) = " << Ven_ref << "   Ven = " << v_en << std::endl;
+    std::cout << "Vee(ref) = " << Vee_ref << "   Vee = " << v_ee << std::endl;
+    std::cout << "mm:T(ref) = " << Tmm_ref << "   T = " << tmm << std::endl;
+    std::cout << "0m:T(ref) = " << T0m_ref << "   T = " << t0m << std::endl;
+    std::cout << "m0:T(ref) = " << Tm0_ref << "   T = " << tm0 << std::endl;
+    std::cout << "E(ref) = " << (Ven_ref + Vee_ref + Tmm_ref) << "   E = " << (v_en + v_ee + tmm) << std::endl;
+  }
+  // Test symmetry of kinetic energy matrix elements over generalized Slater-Hylleraas functions
+  {
+    std::cout << "Checking that kinetic energy is symmetric with respect to particles 1 and 2" << std::endl;
+    const int i = 2;
+    const int j = 3;
+    const int k = 1;
+    const double alpha = 2.0;
+    const double beta = 1.0;
+    const double gamma = 1.0;
+
+    GenSlaterHylleraasBasisFunction GSHijk(i,j,k,alpha,beta,gamma);
+    GenSlaterHylleraasBasisFunction GSHjik(j,i,k,beta,alpha,gamma);
+    const double T11 = T(GSHijk,GSHijk) * NormConst(GSHijk) * NormConst(GSHijk);
+    const double T22 = T(GSHjik,GSHjik) * NormConst(GSHjik) * NormConst(GSHjik);
+    const double T12 = T(GSHijk,GSHjik) * NormConst(GSHijk) * NormConst(GSHjik);
+    const double T21 = T(GSHjik,GSHijk) * NormConst(GSHjik) * NormConst(GSHijk);
+    std::cout << T11 << " " << T22 << std::endl;
+    std::cout << T12 << " " << T21 << std::endl;
+  }
+  // Check matrix elements of T over generalized Slater-Hylleraas functions in terms of Hylleraas matrix elements
+  {
+    std::cout << "Testing kinetic energy over gen. Slater-Hylleraas" << std::endl;
+    const int n = 0;
+    const int l = 1;
+    const int m = 7;
+    const double zeta = 3.75;
+    if (n + l != 1)
+      throw std::runtime_error("This test only works when n+l == 1");
+    const double alpha = 0.5*zeta;
+    const double beta = 0.5*zeta;
+    const double gamma = 0.0;
+
+    GenSlaterHylleraasBasisFunction GSH10m(1,0,m,alpha,beta,gamma);
+    GenSlaterHylleraasBasisFunction GSH01m(0,1,m,alpha,beta,gamma);
+    const double sign = (l == 1 ? -1.0 : 1.0);
+    const double t = (  T(GSH10m,GSH10m)*NormConst(GSH10m) * NormConst(GSH10m) + 
+			T(GSH01m,GSH01m)*NormConst(GSH01m) * NormConst(GSH01m) + 
+			sign*(T(GSH10m,GSH01m) + T(GSH01m,GSH10m))*NormConst(GSH10m)*NormConst(GSH01m)
+		     );
+    const double s = (  S(GSH10m,GSH10m)*NormConst(GSH10m) * NormConst(GSH10m) + 
+			S(GSH01m,GSH01m)*NormConst(GSH01m) * NormConst(GSH01m) + 
+			sign*(S(GSH10m,GSH01m) + S(GSH01m,GSH10m))*NormConst(GSH10m)*NormConst(GSH01m)
+		     );
+
+    HylleraasBasisFunction Hnlm(n,l,m,zeta);
+    const double T_ref = T(Hnlm,Hnlm);
+    std::cout << "n = " << n << " l = " << l << " m = " << m << "  T_ref = " << T_ref << " T = " << t/s << std::endl;
+  }
 }
 
 };
