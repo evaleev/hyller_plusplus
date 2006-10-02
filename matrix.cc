@@ -125,16 +125,16 @@ double density_Nuc(const HylleraasBasisFunction& bfi,
 
 // evaluates elementary integral \int_0^\infty dr r^i e^(-zr)
 namespace {
-  double S(double z, int i) {
-    double s = fac(i)/pow(z,i+1);
-    return s;
+  double I(double z, int i) {
+    double integral = fac(i)/pow(z,i+1);
+    return integral;
   }
 };
 
 // normalization constant
 double normConst(const Orbital& bf)
 {
-  double N = 1.0/sqrt( S(2.0*bf.zeta,2*bf.n+2) );
+  double N = 1.0/sqrt( I(2.0*bf.zeta,2*bf.n+2) );
   return N;
 }
 
@@ -142,7 +142,7 @@ double normConst(const Orbital& bf)
 double Overlap(const Orbital& bfi, const Orbital& bfj)
 {
   const double zeta = bfi.zeta;
-  double overlap = normConst(bfi) * normConst(bfj) * S(2.0*zeta,bfi.n+bfj.n+2);
+  double overlap = normConst(bfi) * normConst(bfj) * I(2.0*zeta,bfi.n+bfj.n+2);
   return overlap;
 }
 
@@ -150,7 +150,7 @@ double Overlap(const Orbital& bfi, const Orbital& bfj)
 double V_en(const Orbital& bfi, const Orbital& bfj)
 {
   const double zeta = bfi.zeta;
-  double v_ne = normConst(bfi) * normConst(bfj) * S(2.0*zeta,bfi.n+bfj.n+1);
+  double v_ne = normConst(bfi) * normConst(bfj) * I(2.0*zeta,bfi.n+bfj.n+1);
   return v_ne;
 }
 
@@ -160,7 +160,7 @@ double T(const Orbital& bfi, const Orbital& bfj)
   const double zeta = bfi.zeta;
   const double twoz = 2.0 * zeta;
   const int ipj = bfi.n + bfj.n;
-  double t = zeta*zeta*S(twoz,ipj+2) - 2.0*(bfj.n+1)*zeta*S(twoz,ipj+1) + (bfj.n+1)*bfj.n*S(twoz,ipj);
+  double t = zeta*zeta*I(twoz,ipj+2) - 2.0*(bfj.n+1)*zeta*I(twoz,ipj+1) + (bfj.n+1)*bfj.n*I(twoz,ipj);
   t *= -0.5 * normConst(bfi) * normConst(bfj);
   return t;
 }
@@ -204,14 +204,14 @@ double Overlap(const CSF& bfi, const CSF& bfj)
   }
 }
 
-////
+/////////////
 
 namespace {
 
   // computes integral of function r1^i r2^j r12^k exp(-zeta1*r1) exp(-zeta2*r2)
   double I(double zeta1, double zeta2, int i, int j, int k)
   {
-    const double sixteenpi2 = 16.0 * M_PI;
+    const double sixteenpi2 = 16.0 * M_PI * M_PI;
     const int ki = k+i;
     const int kij = k+i+j;
     const double zeta12 = zeta1+zeta2;
@@ -250,10 +250,10 @@ double normConst(const GenHylleraasBasisFunction& bfi)
 			 2*bfi.i,
 			 2*bfi.j,
 			 2*bfi.k);
-  const double Sijji = I(2.0*bfi.zeta1,
-			 2.0*bfi.zeta2,
-			 2*bfi.i,
-			 2*bfi.j,
+  const double Sijji = I(bfi.zeta1+bfi.zeta2,
+			 bfi.zeta1+bfi.zeta2,
+			 bfi.i+bfi.j,
+			 bfi.i+bfi.j,
 			 2*bfi.k);
   const double S = (bfi.spin == SpinSinglet) ? 2.0*(Sijij+Sijji) : 2.0*(Sijij-Sijji);
   return 1.0/std::sqrt(S);
@@ -328,6 +328,43 @@ V_ee(const GenHylleraasBasisFunction& bfi,
   }
   GenHylleraasBasisFunction bf22(bf2->spin,bf2->i,bf2->j,bf2->k-1,bf2->zeta1,bf2->zeta2);
   return normConst(*bf2) * Overlap(*bf1,bf22) / normConst(bf22);
+}
+
+/////////////
+
+/** Computes integral of function r1^i r2^j r12^k exp(-alpha*r1 - beta*r2 - gamma*r12) over r1, r2, and r12. Jacobian is not included. See J. Chem. Phys. 121, 6323 (2004). */
+template<>
+  double I<GenSlaterHylleraasBasisFunction>(const GenSlaterHylleraasBasisFunction& bf)
+{
+  const int i = bf.i;
+  const int j = bf.j;
+  const int k = bf.k;
+  const double alpha = bf.alpha;
+  const double beta = bf.beta;
+  const double gamma = bf.gamma;
+
+  const double pfac = 2.0 * fac(i) * fac(j) * fac(k);
+  const double ab = alpha+beta;
+  const double ag = alpha+gamma;
+  const double bg = beta+gamma;
+  
+  double sum = 0.0;
+  for(int l=0; l<=i; ++l) {
+    for(int m=0; m<=j; ++m) {
+      const int jml = j - m + l;
+      for(int n=0; n<=k; ++n) {
+	const int iln = i - l + n;
+	const int knm = k - n + m;
+	
+	const double num = binomial(jml,l) * binomial(iln,n) * binomial(knm,m);
+	const double denom = pow(ab,jml+1) * pow(ag,iln+1) * pow(bg,knm+1);
+	sum += num/denom;
+      }
+    }
+  }
+  
+  const double result = sum * pfac;
+  return result;
 }
 
 };  // namespace hyller

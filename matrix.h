@@ -75,6 +75,46 @@ namespace hyller {
   // normConst is not provided for CSFs because they cannot be normalized easily
   /// overlap
   double Overlap(const CSF& bfi, const CSF& bfj);
+
+
+
+  /////////////////////////////////////////
+  // Generic functions for matrix elements
+  /////////////////////////////////////////
+
+  // The fundamental operations:
+
+  /** The "radial" integral:
+      I = \int f(r_1,r_2,r_{12}) dr_1 dr_2 dr_{12}.
+      
+      The integral is elementary: it does not include the Jacobian and angles are not integrated.
+      All other integrals depend on this function.
+   */
+  template <typename F>
+    double I(const F& f);
+
+  /** Overlap between 2 unnormalized functions. Implementation of this function depends on the details of F and the Jacobian.
+
+      Hence operator*(class F&, class F&) and apply_jacobian(class F&) must be defined for class F.
+  */
+  template <typename F>
+    double S(const F& bra, const F& ket);
+  /** Computes the normalization constant. Uses S(). */
+  template <typename F>
+    double NormConst(const F& bf);
+  /** Matrix element of the r_1^i r_2^j r_{12}^k operator over unnormalized functions. Uses S(). */
+  template <typename F>
+    double gen_mult_oper(int i, int j, int k, const F& bra, const F& ket);
+  /** Matrix element of the electron repulsion operator (r_{12}^{-1}) over unnormalized functions. Uses S() and other functions. */
+  template <typename F>
+    double V_ee(const F& bra, const F& ket);
+  /** Matrix element of the nuclear attraction operator (- r_1^{-1} - r_2^{-1}) over unnormalized functions. Uses S() and other functions. */
+  template <typename F>
+    double V_ne(const F& bra, const F& ket);
+  /** Matrix element of the kinetic energy operator over unnormalized functions. Uses S() and other functions. */
+  template <typename F>
+    double T(const F& bra, const F& ket);
+
 }
 
 #endif

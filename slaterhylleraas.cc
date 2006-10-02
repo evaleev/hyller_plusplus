@@ -11,9 +11,9 @@ SlaterHylleraasBasisFunction::SlaterHylleraasBasisFunction() :
 SlaterHylleraasBasisFunction::SlaterHylleraasBasisFunction(int nn, int ll, int mm, double zz, double gg) :
   n(nn), l(ll), m(mm), zeta(zz), gamma(gg)
 {
-  if (zeta <= 0.0)
+  if (zeta < 0.0)
     throw std::runtime_error("SlaterHylleraasBasisFunction::SlaterHylleraasBasisFunction -- nonpositive zeta");
-  if (gamma <= 0.0)
+  if (gamma < 0.0)
     throw std::runtime_error("SlaterHylleraasBasisFunction::SlaterHylleraasBasisFunction -- nonpositive gamma");
 }
 
@@ -119,4 +119,112 @@ SlaterHylleraasWfn::SlaterHylleraasWfn(const SlaterHylleraasBasisSet& bs, const 
 {
   if (bs_.num_bf() != coefs_.size())
     throw std::runtime_error("SlaterHylleraasWfn::SlaterHylleraasWfn -- size of basis set and coefficient vector do not match");
+}
+
+
+////////////////////////
+
+GenSlaterHylleraasBasisFunction::GenSlaterHylleraasBasisFunction() :
+  i(-1), j(-1), k(-1), alpha(-1.0), beta(-1.0), gamma(-1.0)
+{
+}
+
+GenSlaterHylleraasBasisFunction::GenSlaterHylleraasBasisFunction(int ii, int jj, int kk, double a, double b, double g) :
+  i(ii), j(jj), k(kk), alpha(a), beta(b), gamma(g)
+{
+  if (alpha < 0.0)
+    throw std::runtime_error("GenSlaterHylleraasBasisFunction::GenSlaterHylleraasBasisFunction -- negative alpha");
+  if (beta < 0.0)
+    throw std::runtime_error("GenSlaterHylleraasBasisFunction::GenSlaterHylleraasBasisFunction -- negative beta");
+  if (gamma < 0.0)
+    throw std::runtime_error("GenSlaterHylleraasBasisFunction::GenSlaterHylleraasBasisFunction -- negative gamma");
+}
+
+bool
+hyller::operator==(const GenSlaterHylleraasBasisFunction& A, const GenSlaterHylleraasBasisFunction& B)
+{
+  return (A.i==B.i && A.j==B.j && A.k==B.k && A.alpha==B.alpha && A.beta==B.beta && A.gamma==B.gamma);
+}
+
+GenSlaterHylleraasBasisFunction
+hyller::operator*(const GenSlaterHylleraasBasisFunction& A, const GenSlaterHylleraasBasisFunction& B)
+{
+  return GenSlaterHylleraasBasisFunction(A.i+B.i,A.j+B.j,A.k+B.k,A.alpha+B.alpha,A.beta+B.beta,A.gamma+B.gamma);
+}
+
+GenSlaterHylleraasBasisFunction
+hyller::apply_jacobian(const GenSlaterHylleraasBasisFunction& A)
+{
+  return GenSlaterHylleraasBasisFunction(A.i+1,A.j+1,A.k+1,A.alpha,A.beta,A.gamma);
+}
+
+GenSlaterHylleraasBasisFunction
+hyller::gen_r1r2r12_oper(int i, int j, int k)
+{
+  return GenSlaterHylleraasBasisFunction(i,j,k,0.0,0.0,0.0);
+}
+
+GenSlaterHylleraasBasisSet::GenSlaterHylleraasBasisSet(int ijk_max, int ijk_min, int ij_max, int k_max, double alpha, double beta, double gamma) :
+  bfs_(0), ijk_max_(ijk_max), ij_max_(ij_max), k_max_(k_max), alpha_(alpha), beta_(beta), gamma_(gamma)
+{
+  bfs_.reserve(expected_num_bf);
+
+  const bool alpha_eq_beta = (alpha_ == beta_);
+  /// iterate over basis functions, given the constraints
+  for(int i=0;i<=ijk_max;i++)
+    for(int j=0;j<=ijk_max-i;j++)
+      for(int k=0;k<=ijk_max-i-j;k++) {
+	if (i > ij_max || j > ij_max || k > k_max || (i+j+k < ijk_min))
+            continue;
+        
+	GenSlaterHylleraasBasisFunction bf(i,j,k,alpha_,beta_,gamma_);
+	bfs_.push_back(bf);
+	// Include the function where alpha and beta are permuted also
+	if (i == j && !alpha_eq_beta) {
+	  GenSlaterHylleraasBasisFunction bf(i,j,k,beta_,alpha_,gamma_);
+	  bfs_.push_back(bf);
+	}
+      }
+}
+
+void
+GenSlaterHylleraasBasisSet::set_alpha(double zeta)
+{
+  if (zeta <= 0.0)
+    throw std::runtime_error("GenSlaterHylleraasBasisSet::set_alpha -- alpha must be positive");
+  alpha_ = zeta;
+  const int nbf = bfs_.size();
+  for(int i=0; i<nbf; i++)
+    bfs_[i].alpha = alpha_;
+}
+
+void
+GenSlaterHylleraasBasisSet::set_beta(double zeta)
+{
+  if (zeta <= 0.0)
+    throw std::runtime_error("GenSlaterHylleraasBasisSet::set_beta -- beta must be positive");
+  beta_ = zeta;
+  const int nbf = bfs_.size();
+  for(int i=0; i<nbf; i++)
+    bfs_[i].beta = beta_;
+}
+
+void
+GenSlaterHylleraasBasisSet::set_gamma(double zeta)
+{
+  if (zeta <= 0.0)
+    throw std::runtime_error("GenSlaterHylleraasBasisSet::set_gamma -- gamma must be positive");
+  gamma_ = zeta;
+  const int nbf = bfs_.size();
+  for(int i=0; i<nbf; i++)
+    bfs_[i].gamma = gamma_;
+}
+
+int
+GenSlaterHylleraasBasisSet::find(const GenSlaterHylleraasBasisFunction& bf) const
+{
+  std::vector<GenSlaterHylleraasBasisFunction>::const_iterator result = std::find(bfs_.begin(),bfs_.end(),bf);
+  if (result == bfs_.end())
+    throw BasisFunctionNotFound();
+  return result - bfs_.begin();
 }

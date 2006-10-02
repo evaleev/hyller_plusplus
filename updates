@@ -1,4 +1,8 @@
 
+2006-10-01      Started generalized Slater Hylleraas code. Matrix elements will be computed using generic mechanism.
+
+2006-09-30	Merged in general Hylleraas code (2 exponents) which I added in May.
+
 2006-09-05	Started Slater-Hylleraas code.
 
 2006-05-11	Initial C++ version. Very experimental at the moment. Can do 1S SCF. Need new integrals to compute MPn. CI part is commented out.

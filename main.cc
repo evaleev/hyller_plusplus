@@ -4,6 +4,7 @@
 *                                                           *
 *************************************************************/
 
+#include <iostream>
 #include <stdexcept>
 #include "defines.h"
 #include "includes.h"
@@ -11,6 +12,8 @@
 #include "polynom.h"
 #include "misc.h"
 #include "hylleraas.h"
+#include "slaterhylleraas.h"
+#include "matrix.timpl.h"
 #include "projector.h"
 
 using namespace hyller;
@@ -241,6 +244,34 @@ int main(int argc, char **argv)
     CSF_2_Hylleraas csf2hyll_3(csfbs_3,hyllbs3);
   }
 #endif
+
+  /*----------------------
+    Test various features
+   ----------------------*/
+  // Test matrix elements over generalized Slater-Hylleraas functions
+  {
+    const int m = 11;
+    const double zeta = 3.0;
+    std::cout << "Testing matrix elements of GenSlaterHylleraasBasisFunction (m=" << m <<")" << std::endl;
+    HylleraasBasisFunction H00m(0,0,m,zeta);
+    const double S_ref = Overlap(H00m,H00m);
+    const double uS_ref = S_ref / (normConst(H00m) * normConst(H00m));
+    const double Ven_ref = V_en(H00m,H00m);
+    const double Vee_ref = V_ee(H00m,H00m);
+    const double T_ref = T(H00m,H00m);
+    GenSlaterHylleraasBasisFunction GSH00m(0,0,m,0.5*zeta,0.5*zeta,0.0);
+    const double us = S(GSH00m,GSH00m);
+    const double s = us * NormConst(GSH00m) * NormConst(GSH00m);
+    const double v_en = 2.0*V_ne(GSH00m,GSH00m) * NormConst(GSH00m) * NormConst(GSH00m);
+    const double v_ee = V_ee(GSH00m,GSH00m) * NormConst(GSH00m) * NormConst(GSH00m);
+    const double t = T(GSH00m,GSH00m) * NormConst(GSH00m) * NormConst(GSH00m);
+    //std::cout << "Unnorm: S(ref) = " << uS_ref << "   S = " << us << std::endl;
+    std::cout << "S(ref) = " << S_ref << "   S = " << s << std::endl;
+    std::cout << "Ven(ref) = " << Ven_ref << "   Ven = " << v_en << std::endl;
+    std::cout << "Vee(ref) = " << Vee_ref << "   Vee = " << v_ee << std::endl;
+    std::cout << "T(ref) = " << T_ref << "   T = " << t << std::endl;
+  }
+  
 
   tstop(outfile);
   ip_done();
