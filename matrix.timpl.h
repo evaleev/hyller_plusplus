@@ -44,78 +44,89 @@ namespace hyller {
     return result;
   }
 
-  /** Matrix element of the kinetic energy operator over unnormalized functions expressed in (r1,r2,r12) coordinates */
+  /** Matrix element of the kinetic energy operator over unnormalized functions expressed in (r1,r2,r12) coordinates. See IJQC 101, 246 (2004). */
   template <typename F>
     double T_R1R2R12(const F& bra, const F& ket) {
 
-    const F _m1_0_0(gen_r1r2r12_oper(-1,0,0));
-    const F _m2_0_0(gen_r1r2r12_oper(-2,0,0));
-    const F _0_m1_0(gen_r1r2r12_oper(0,-1,0));
-    const F _0_m2_0(gen_r1r2r12_oper(0,-2,0));
-    const F _0_0_m1(gen_r1r2r12_oper(0,0,-1));
-    const F _0_0_m2(gen_r1r2r12_oper(0,0,-2));
-    
     double T1 = 0.0;
     double T2 = 0.0;
+    const double cij = 2.0;
 
-    T1 -= ket.alpha * S(bra,_m1_0_0*ket);
+#if 1
+    T1 -= ket.alpha * gen_mult_oper(-1,0,0,bra,ket);
     if (ket.i) {
-      T1 += ket.i*S(bra,_m2_0_0*ket);
+      T1 += ket.i*gen_mult_oper(-2,0,0,bra,ket);
     }
-    T1 -= ket.beta * S(bra,_0_m1_0*ket);
+    T1 -= ket.beta * gen_mult_oper(0,-1,0,bra,ket);
     if (ket.j) {
-      T1 += ket.j*S(bra,_0_m2_0*ket);
+      T1 += ket.j*gen_mult_oper(0,-2,0,bra,ket);
     }
-    T1 -= ket.gamma * S(bra,_0_0_m1*ket);
+    T1 -= cij * ket.gamma * gen_mult_oper(0,0,-1,bra,ket);
     if (ket.k) {
-      T1 += ket.k*S(bra,_0_0_m2*ket);
+      T1 += cij * ket.k*gen_mult_oper(0,0,-2,bra,ket);
     }
+    T1 *= -1.0;
+#endif
 
-    T1 *= -2.0;
-
-    
-    T2 -= (2.0*ket.alpha*ket.alpha + 2.0*ket.beta*ket.beta + ket.gamma*ket.gamma) * S(bra,ket);
+#if 1
+    T2 += -0.5*(ket.alpha*ket.alpha + ket.beta*ket.beta + cij*ket.gamma*ket.gamma) * S(bra,ket);
     if (ket.i) {
-      T2 += 4.0*ket.i*ket.alpha * S(bra,_m1_0_0*ket);
+      T2 += ket.i*ket.alpha * gen_mult_oper(-1,0,0,bra,ket);
       if (ket.i > 1) {
-	T2 -= 2.0*ket.i*(ket.i-1) * S(bra,_m2_0_0*ket);
+	T2 += -0.5*ket.i*(ket.i-1) * gen_mult_oper(-2,0,0,bra,ket);
       }
     }
     if (ket.j) {
-      T2 += 4.0*ket.j*ket.beta * S(bra,_0_m1_0*ket);
+      T2 += ket.j*ket.beta * gen_mult_oper(0,-1,0,bra,ket);
       if (ket.j > 1) {
-	T2 -= 2.0*ket.j*(ket.j-1) * S(bra,_0_m2_0*ket);
+	T2 += -0.5*ket.j*(ket.j-1) * gen_mult_oper(0,-2,0,bra,ket);
       }
     }
     if (ket.k) {
-      T2 += 2.0*ket.k*ket.gamma * S(bra,_0_0_m1*ket);
+      T2 += cij * ket.k*ket.gamma * gen_mult_oper(0,0,-1,bra,ket);
       if (ket.k > 1) {
-	T2 -= ket.k*(ket.k-1) * S(bra,_0_0_m2*ket);
+	T2 += -0.5* cij * ket.k*(ket.k-1) * gen_mult_oper(0,0,-2,bra,ket);
       }
     }
+#endif
 
-    T2 -= ket.alpha*ket.gamma * (gen_mult_oper(-1,0,1,bra,ket) - gen_mult_oper(-1,2,-1,bra,ket));
-    T2 -= ket.beta*ket.gamma * (gen_mult_oper(0,-1,1,bra,ket) - gen_mult_oper(2,-1,-1,bra,ket));
+#define SYMMETRIC_MIXED_T2 1
+#if SYMMETRIC_MIXED_T2
+    const double c1 = -0.5;
+#else
+    const double c1 = -1.0;
+#endif
 
+#if 1
+    T2 += c1* ket.alpha*ket.gamma * (gen_mult_oper(-1,0,1,bra,ket) + gen_mult_oper(1,0,-1,bra,ket) - gen_mult_oper(-1,2,-1,bra,ket));
+#if SYMMETRIC_MIXED_T2
+    T2 += c1* ket.beta*ket.gamma  * (gen_mult_oper(0,-1,1,bra,ket) + gen_mult_oper(0,1,-1,bra,ket) - gen_mult_oper(2,-1,-1,bra,ket));
+#endif
+#endif
+
+#if 1
     if (ket.i) {
-      T2 += ket.i * ket.gamma * (gen_mult_oper(-2,0,1,bra,ket) - gen_mult_oper(-3,2,1,bra,ket));
+      T2 -= c1* ket.i*ket.gamma * (gen_mult_oper(-2,0,1,bra,ket) + gen_mult_oper(0,0,-1,bra,ket) - gen_mult_oper(-2,2,-1,bra,ket));
     }
     if (ket.k) {
-      T2 += ket.k * ket.alpha * (gen_mult_oper(-1,0,0,bra,ket) - gen_mult_oper(-1,2,-2,bra,ket));
+      T2 -= c1* ket.k*ket.alpha * (gen_mult_oper(-1,0,0,bra,ket) + gen_mult_oper(1,0,-2,bra,ket) - gen_mult_oper(-1,2,-2,bra,ket));
     }
     if (ket.i && ket.k) {
-      T2 -= ket.i * ket.k * (gen_mult_oper(-2,0,0,bra,ket) - gen_mult_oper(-2,2,-2,bra,ket));
+      T2 += c1* ket.i*ket.k * (gen_mult_oper(-2,0,0,bra,ket) + gen_mult_oper(0,0,-2,bra,ket) - gen_mult_oper(-2,2,-2,bra,ket));
     }
 
+#if SYMMETRIC_MIXED_T2
     if (ket.j) {
-      T2 += ket.j * ket.gamma * (gen_mult_oper(0,-2,1,bra,ket) - gen_mult_oper(2,-3,1,bra,ket));
+      T2 -= c1* ket.j*ket.gamma * (gen_mult_oper(0,-2,1,bra,ket) + gen_mult_oper(0,0,-1,bra,ket) - gen_mult_oper(2,-2,-1,bra,ket));
     }
     if (ket.k) {
-      T2 += ket.k * ket.beta * (gen_mult_oper(0,-1,0,bra,ket) - gen_mult_oper(2,-1,-2,bra,ket));
+      T2 -= c1* ket.k*ket.beta * (gen_mult_oper(0,-1,0,bra,ket) + gen_mult_oper(0,1,-2,bra,ket) - gen_mult_oper(2,-1,-2,bra,ket));
     }
     if (ket.j && ket.k) {
-      T2 -= ket.j * ket.k * (gen_mult_oper(0,-2,0,bra,ket) - gen_mult_oper(2,-2,-2,bra,ket));
+      T2 += c1* ket.j*ket.k * (gen_mult_oper(0,-2,0,bra,ket) + gen_mult_oper(0,0,-2,bra,ket) - gen_mult_oper(2,-2,-2,bra,ket));
     }
+#endif
+#endif
 
     const double result = T1 + T2;
     return result;
