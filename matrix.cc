@@ -131,6 +131,12 @@ namespace {
   }
 };
 
+template <>
+  double I<Orbital>(const Orbital& bf)
+{
+  return I(bf.zeta,bf.n);
+}
+
 // normalization constant
 double normConst(const Orbital& bf)
 {
@@ -366,5 +372,51 @@ template<>
   const double result = sum * pfac;
   return result;
 }
+
+template<>
+double DeltaR1<GenSlaterHylleraasBasisFunction>(const GenSlaterHylleraasBasisFunction& bra,
+						const GenSlaterHylleraasBasisFunction& ket)
+{
+  const GenSlaterHylleraasBasisFunction f12(bra*ket);
+  // if the integrand depends polynomially on r1, the matrix element is 0;
+  if (f12.i > 0)
+    return 0.0;
+  else {
+    const Orbital o(f12.j+f12.k+2,f12.beta+f12.gamma);
+    const double result = 4.0 * M_PI * I(o);
+    return result;
+  }
+}
+
+template<>
+double DeltaR2<GenSlaterHylleraasBasisFunction>(const GenSlaterHylleraasBasisFunction& bra,
+						const GenSlaterHylleraasBasisFunction& ket)
+{
+  const GenSlaterHylleraasBasisFunction f12(bra*ket);
+  // if the integrand depends polynomially on r2, the matrix element is 0;
+  if (f12.j > 0)
+    return 0.0;
+  else {
+    const Orbital o(f12.i+f12.k+2,f12.alpha+f12.gamma);
+    const double result = 4.0 * M_PI * I(o);
+    return result;
+  }
+}
+
+template<>
+double DeltaR12<GenSlaterHylleraasBasisFunction>(const GenSlaterHylleraasBasisFunction& bra,
+						 const GenSlaterHylleraasBasisFunction& ket)
+{
+  const GenSlaterHylleraasBasisFunction f12(bra*ket);
+  // if the integrand depends polynomially on r12, the matrix element is 0;
+  if (f12.k > 0)
+    return 0.0;
+  else {
+    const Orbital o(f12.i+f12.j+2,f12.alpha+f12.beta);
+    const double result = 4.0 * M_PI * I(o);
+    return result;
+  }
+}
+
 
 };  // namespace hyller

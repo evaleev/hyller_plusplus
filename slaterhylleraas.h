@@ -126,9 +126,16 @@ namespace hyller {
     gen_r1r2r12_oper(int i, int j, int k);
 
 
+  template <typename T> class Wavefunction;
+
   /// Basis set of generalized Slater-Hylleraas-type functions
   class GenSlaterHylleraasBasisSet {
   public:
+    /// Type of the basis functions this set contains
+    typedef GenSlaterHylleraasBasisFunction BasisFunction;
+    /// Wave function type based on this basis
+    typedef Wavefunction<GenSlaterHylleraasBasisSet> Wfn;
+
     /// Constructs a generalized Slater-Hylleraas-type basis set, given the parameters and restrictions
     GenSlaterHylleraasBasisSet(int ijk_max, int ijk_min, int ij_max, int k_max, double alpha, double beta, double gamma);
     ~GenSlaterHylleraasBasisSet() {}
@@ -166,21 +173,6 @@ namespace hyller {
     double alpha_;
     double beta_;
     double gamma_;
-  };
-
-  /**
-     Is a wave vector in subspace of Hilbert space supported by the basis
-   */
-  class GenSlaterHylleraasWfn {
-  public:
-    GenSlaterHylleraasWfn(const GenSlaterHylleraasBasisSet& bs, const std::vector<double>& coefs);
-    ~GenSlaterHylleraasWfn() {}
-
-    const GenSlaterHylleraasBasisSet& basis() const { return bs_; }
-    const std::vector<double> coefs() const { return coefs_; }
-  private:
-    const GenSlaterHylleraasBasisSet& bs_;
-    std::vector<double> coefs_;
   };
 
 };

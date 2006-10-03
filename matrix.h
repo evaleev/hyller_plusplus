@@ -114,6 +114,15 @@ namespace hyller {
   /** Matrix element of the kinetic energy operator over unnormalized functions. Uses S() and other functions. */
   template <typename F>
     double T(const F& bra, const F& ket);
+  /** Matrix element of the delta(r1) operator over unnormalized functions. */
+  template <typename F>
+    double DeltaR1(const F& bra, const F& ket);
+  /** Matrix element of the delta(r2) operator over unnormalized functions. */
+  template <typename F>
+    double DeltaR2(const F& bra, const F& ket);
+  /** Matrix element of the delta(r12) operator over unnormalized functions. */
+  template <typename F>
+    double DeltaR12(const F& bra, const F& ket);
 
 }
 

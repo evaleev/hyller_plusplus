@@ -15,6 +15,8 @@
 #include "slaterhylleraas.h"
 #include "matrix.timpl.h"
 #include "projector.h"
+#include "wfn.h"
+#include "solve.h"
 
 using namespace hyller;
 
@@ -224,9 +226,11 @@ int main(int argc, char **argv)
   /*---------------------------------------------------------------------------
     Compute Hartree-Fock wave function
    ---------------------------------------------------------------------------*/
+#if !SKIP_HF
   OrbitalBasisSet orbs(nlm_max/2, 0, zeta/2);
   const int norbs = orbs.num_bf();
   const OrbitalWfn& hfwfn = solvHF(orbs,hyllbs,Z,threshold,100,opt,maxiter);
+#endif
 
 #if 0
   SDBasisSet sdbs(SpinAlphaBeta,orbs);
@@ -251,6 +255,14 @@ int main(int argc, char **argv)
     Test various features
    ----------------------*/
   test_gsh();
+  {
+    const double alpha = zeta/2;
+    fprintf(outfile,"\t-Solving CI problem in generalized Slater-Hylleraas basis:\n");
+    typedef GenSlaterHylleraasBasisSet Basis;
+    typedef Wavefunction<Basis> Wfn;
+    Basis bs(nlm_max,nlm_min,n_max,m_max,alpha,alpha,0.0);
+    const Wfn& wfn = solveCi(bs,Z,root,false,threshold,maxiter);
+  }
 
   tstop(outfile);
   ip_done();
@@ -1071,6 +1083,27 @@ void test_gsh()
     HylleraasBasisFunction Hnlm(n,l,m,zeta);
     const double T_ref = T(Hnlm,Hnlm);
     std::cout << "n = " << n << " l = " << l << " m = " << m << "  T_ref = " << T_ref << " T = " << t/s << std::endl;
+  }
+  // Test matrix elements of delta functions
+  {
+    std::cout << "Testing delta function integrals over gen. Slater-Hylleraas" << std::endl;
+    const int i = 0;
+    const int j = 0;
+    const int k = 0;
+    const double alpha = 2.0;
+    const double beta = 2.0;
+    const double gamma = 0.0;
+
+    GenSlaterHylleraasBasisFunction bf(i,j,k,alpha,beta,gamma);
+    Orbital o2(j+k,beta);
+    const double nc12 = NormConst(bf);
+    const double nc2 = normConst(o2);
+    const double s2 = Overlap(o2,o2);
+    const double delta_r1 = DeltaR1(bf,bf);
+    const double s = S(bf,bf);
+    const double t = T(bf,bf);
+    std::cout << "nc(2) = " << nc2 << " nc(12) = " << nc12 << " s2 = " << s2 << " <delta(r1)> = " << delta_r1 << " <S> = " << s << " <T> = "<< t << std::endl;
+    std::cout << "<T - 2 delta(r1)> = " << nc12 * nc12 * (t - 2.0*delta_r1) << std::endl;
   }
 }
 
