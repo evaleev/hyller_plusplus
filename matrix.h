@@ -13,8 +13,8 @@ namespace hyller {
      matrix elements in Hylleraas basis
    */
   double normConst(const HylleraasBasisFunction& bf);
-  double Overlap(const HylleraasBasisFunction& bfi,
-		 const HylleraasBasisFunction& bfj);
+  double S(const HylleraasBasisFunction& bfi,
+	   const HylleraasBasisFunction& bfj);
   double V_en(const HylleraasBasisFunction& bfi,
 	      const HylleraasBasisFunction& bfj);
   double V_ee(const HylleraasBasisFunction& bfi,
@@ -28,8 +28,8 @@ namespace hyller {
      matrix elements in nonsymmetric Hylleraas basis (i.e. in terms of r1, r2, and r12)
   */
   double normConst(const GenHylleraasBasisFunction& bf);
-  double Overlap(const GenHylleraasBasisFunction& bfi,
-		 const GenHylleraasBasisFunction& bfj);
+  double S(const GenHylleraasBasisFunction& bfi,
+	   const GenHylleraasBasisFunction& bfj);
   double V_en(const GenHylleraasBasisFunction& bfi,
 	      const GenHylleraasBasisFunction& bfj);
   double V_ee(const GenHylleraasBasisFunction& bfi,
@@ -43,8 +43,8 @@ namespace hyller {
   /// The elementary integral is the integral over whole space of the given function without the Jacobian!
   double I(const SlaterHylleraasBasisFunction& bf);
   double normConst(const SlaterHylleraasBasisFunction& bf);
-  double Overlap(const SlaterHylleraasBasisFunction& bfi,
-		 const SlaterHylleraasBasisFunction& bfj);
+  double S(const SlaterHylleraasBasisFunction& bfi,
+	   const SlaterHylleraasBasisFunction& bfj);
   double V_en(const SlaterHylleraasBasisFunction& bfi,
 	      const SlaterHylleraasBasisFunction& bfj);
   double V_ee(const SlaterHylleraasBasisFunction& bfi,
@@ -58,7 +58,7 @@ namespace hyller {
   /// Normalization constant for phi(i,z)
   double normConst(const Orbital& bf);
   /// Overlap between phi(i,z) and phi(j,z)
-  double Overlap(const Orbital& bfi, const Orbital& bfj);
+  double S(const Orbital& bfi, const Orbital& bfj);
   double V_en(const Orbital& bfi, const Orbital& bfj);
   double T(const Orbital& bfi, const Orbital& bfj);
 
@@ -67,14 +67,14 @@ namespace hyller {
   */
   // normConst is not provided for determinants because they are normalized automatically
   /// overlap
-  double Overlap(const SD& bfi, const SD& bfj);
+  double S(const SD& bfi, const SD& bfj);
 
   /**
      matrix elements in CSF basis
   */
   // normConst is not provided for CSFs because they cannot be normalized easily
   /// overlap
-  double Overlap(const CSF& bfi, const CSF& bfj);
+  double S(const CSF& bfi, const CSF& bfj);
 
 
 

@@ -13,8 +13,8 @@ namespace hyller {
   public:
     typedef T BF;
     typedef BF PrimBF;
-    typedef std::pair<PrimBF,double> ContrTerm;
-    typedef std::vector<ContrTerm> ContrBF;
+    typedef ContractedBasisFunction<PrimBF> ContrBF;
+    typedef typename ContrBF::ContrTerm ContrTerm;
     typedef std::vector<PrimBF> PrimBFSet;
     typedef std::vector<ContrBF> ContrBFSet;
 
@@ -33,30 +33,31 @@ namespace hyller {
       bfs_.push_back(bf);
 
       // Now do the same for primitives, and also keep track of coefficients
-      typename ContrBF::const_iterator end = bf.end();
-      ContrData cdata(bf.size());
-      unsigned int loc_pindex = 0;
-      for(typename ContrBF::const_iterator t=bf.begin(); t!=end; ++t, ++loc_pindex) {
-	PrimBF p = t->first;
+
+      // loop over all terms in the contraction
+      const unsigned int np = bf.n();
+      ContrData cdata;
+      for(unsigned int p=0; p<np; ++p) {
+	const ContrTerm& t = bf.term(p);
+	PrimBF p = t.first;
 	typename PrimBFSet::const_iterator pend = prims_.end();
 	typename PrimBFSet::const_iterator piter = std::find(prims_.begin(),prims_.end(),p);
-	unsigned int abs_pindex;
+	unsigned int pabs;
 	if (piter == pend) {
-	  abs_pindex = prims_.size();
+	  pabs = prims_.size();
 	  prims_.push_back(p);
 	}
 	else {
-	  abs_pindex = piter - prims_.begin();
+	  pabs = piter - prims_.begin();
 	}
-	cdata[loc_pindex].first = abs_pindex;
-	cdata[loc_pindex].second = t->second;
+	cdata.push_back(std::make_pair(pabs,t.second));
       }
       coefs_.push_back(cdata);
     }
 
     /// Adds a unit-length contraction
     void add(const PrimBF& bf) {
-      add(ContrBF(1,std::make_pair(bf,1.0)));
+      add(ContrBF(bf));
     }
 
     /// The number of contracted basis functions

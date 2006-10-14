@@ -111,6 +111,8 @@ namespace hyller {
     double alpha;
     double beta;
     double gamma;
+
+    std::string to_string() const;
   };
 
   /// Comparison operator
@@ -125,6 +127,11 @@ namespace hyller {
   GenSlaterHylleraasBasisFunction
     gen_r1r2r12_oper(int i, int j, int k);
 
+  class Orbital;
+  /// a product of 2 1-particle functions can be represented as a GenSlaterHylleraasBasisFunction
+  GenSlaterHylleraasBasisFunction
+    operator^(const Orbital& f1,
+	      const Orbital& f2);
 
   template <typename T> class Wavefunction;
 
@@ -156,6 +163,8 @@ namespace hyller {
 
     /// The number of basis functions
     int num_bf() const { return bfs_.size(); }
+    /// The number of basis functions
+    int nbf() const { return bfs_.size(); }
     /// ith basis function
     const GenSlaterHylleraasBasisFunction& bf(int i) const { return bfs_.at(i); }
     /// find this basis function and return its index. Throw, if not found

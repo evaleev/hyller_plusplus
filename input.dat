@@ -17,12 +17,13 @@ hylleraas:(
    mult = 1
    root = 0
    %zopt = true
+   zeta = 3.64
    %zeta = 3.375
    %zeta= 5.2322
-   zeta = 3.5
+   %zeta = 1.0
    charge = 2.0
 
-   cusp_plot = true
+   cusp_plot = false
    radius = 1.0
    np_cusp = 100
    psinorm = false

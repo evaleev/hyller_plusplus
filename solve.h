@@ -2,6 +2,8 @@
 #ifndef _hyller_solve_h_
 #define _hyller_solve_h_
 
+#include <basis.h>
+
 // These must be global -- required by Psi3
 extern "C" {
   extern FILE *infile,*outfile;
@@ -28,7 +30,7 @@ namespace hyller {
       
       double alpha_new = basis.alpha();
       double gamma_new = basis.gamma();
-      const int nbf = basis.num_bf();
+      const int nbf = basis.nbf();
       std::vector<double> coeff(basis.num_bf());
       
       while(iter == 1 || fabs(E-E_old) > threshold) {
@@ -154,6 +156,116 @@ namespace hyller {
 #endif
 
       Wfn* wfn = new Wfn(basis,coeff);
+      return *wfn;
+    }
+
+
+  /// Solves CI problem in a basis set of contracted basis functions of type BF. Currently parameter optimization will not work
+  template <typename BF>
+    Wavefunction< BasisSet<BF> >&
+    solveCi(BasisSet<BF>& basis, double Z, int root_num)
+    {
+      typedef BasisSet<BF> Basis;
+      typedef Wavefunction<Basis> Wfn;
+
+      const int nbf = basis.nbf();
+      const int nprim = basis.nprim();
+      // contraction coefficient matrix
+      double **C = basis.coefs();
+      // eigenvector in the contracted basis
+      std::vector<double> evec(basis.nbf());
+
+
+      //
+      // compute the orthogonalizer X
+      //
+
+      // Compute S matrix in primitive basis
+      double** Sp = block_matrix(nprim,nprim);
+      for(int i=0;i<nprim;i++) {
+	const BF& bfi = basis.prim(i);
+	for(int j=0;j<=i;j++) {
+	  const BF& bfj = basis.prim(j);
+	  Sp[i][j] = Sp[j][i] = hyller::S(bfi,bfj);
+	}
+      }
+      fprintf(outfile,"  -Overlap matrix in primitive basis\n");
+      print_mat(Sp,nprim,nprim,outfile);
+      // convert to contracted basis
+      double** S = UtVU(C,Sp,nprim,nbf);
+      fprintf(outfile,"  -Overlap matrix in contracted basis\n");
+      print_mat(S,nbf,nbf,outfile);
+      // get the orthogonalizer X ...
+      double** X;
+      int indDim = nbf - sq_sqrt(S,&X,nbf);
+      fprintf(outfile,"\t%d basis functions are linearly independent\n",indDim);
+      // ... and its inverse Xinv = X^t * S
+      double** Xinv = block_matrix(indDim,nbf);
+      mmult(X,1,S,0,Xinv,0,indDim,nbf,nbf,0);
+      free_block(Sp);
+      free_block(S);
+      fflush(outfile);
+
+      //
+      // Compute and diagonalize the Hamiltonian
+      //
+
+      // compute Hamiltonian in the primitive basis
+      double** Hp = block_matrix(nprim,nprim);
+      for(int i=0;i<nprim;i++) {
+	const BF& bfi = basis.prim(i);
+	for(int j=0;j<=i;j++) {
+	  const BF& bfj = basis.prim(j);
+	  
+	  double Hij = T(bfi,bfj);
+	  Hij += Z*V_ne(bfi,bfj);
+	  //Hij += Z*(-DeltaR1(bfi,bfj)-DeltaR2(bfi,bfj));
+	  Hij += V_ee(bfi,bfj);
+	  //Hij += DeltaR12(bfi,bfj);
+	  
+	  Hp[j][i] = Hp[i][j] = Hij;
+	}
+      }
+      fprintf(outfile,"  -Hamiltonian matrix in primitive basis\n");
+      print_mat(Hp,nprim,nprim,outfile);
+
+      // convert to contracted basis
+      double** Hc = UtVU(C,Hp,nprim,nbf);
+      free_block(Hp);
+      fprintf(outfile,"  -Hamiltonian matrix in contracted basis\n");
+      print_mat(Hc,nbf,nbf,outfile);
+
+      // convert to orthogonal basis
+      double** H = UtVU(X,Hc,nbf,indDim);
+      free_block(Hc);
+      fprintf(outfile,"  -Hamiltonian matrix in orthogonal basis\n");
+      print_mat(H,indDim,indDim,outfile);
+
+      // diagonalize
+      double* evals = init_array(indDim);
+      double** evecs = block_matrix(indDim,indDim);
+      sq_rsp(indDim,indDim,H,evals,1,evecs,1.0E-20);
+      free_block(H);
+      /* Test - prints out all roots */
+      for(int i=0;i<=root_num;i++)
+	fprintf(outfile,"\tState #%d  E = %3.12lf\n",i+1,evals[i]);
+      const double E = evals[root_num];
+      
+      for(int i=0;i<indDim;i++) /* temporarily putting eigenvector to evals array */
+	evals[i] = evecs[i][root_num];
+      free_block(evecs);
+	
+      for(int i=0;i<nbf;i++) {
+	double c = 0.0;
+	for(int j=0;j<indDim;j++)
+	  c += Xinv[j][i]*evals[j];
+	evec[i] = c;
+      }
+	
+      free_block(X);
+      free_block(Xinv);
+	
+      Wfn* wfn = new Wfn(basis,evec);
       return *wfn;
     }
 

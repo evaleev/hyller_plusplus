@@ -35,6 +35,8 @@ namespace hyller {
 
     /// number of basis functions
     int num_bf() const { return bfs_.size(); }
+    /// number of basis functions
+    int nbf() const { return bfs_.size(); }
     /// ith basis function
     const Orbital& bf(int i) const { return bfs_.at(i); }
 
@@ -64,6 +66,10 @@ namespace hyller {
   /// Given a product of Orbitals I and J, return coefficients for its expansion in terms of hbs. Throw if hbs does not span I exactly
   std::vector<double>
     orbital_to_hylleraas(const Orbital& I, const Orbital& J, const HylleraasBasisSet& hbs);
+
+  template <typename BF> class ContractedBasisFunction;
+  /// Convert an OrbitalWfn to a contracted basis function
+  ContractedBasisFunction<Orbital> contract(const OrbitalWfn&);
 
 };
 

@@ -63,13 +63,24 @@ namespace hyller {
 	contr_[t].second *= c;
     }
 
+    /// Will return false if the order of primitives is not the same
+    bool operator==(const ContractedBasisFunction& A)
+    {
+      const unsigned int nt = n();
+      if (nt != A.n()) return false;
+      for(int t=0; t<nt; ++t) {
+	if (contr_[t] != A.contr_[t]) return false;
+      }
+      return true;
+    }
+
     std::string to_string() const {
       std::ostringstream oss;
       const unsigned int nt = n();
       if (nt) {
-	oss << " " << contr_[0].second << " * " << contr_[0].first.to_string() << std::endl;	
+	oss << "  " << contr_[0].second << " * " << contr_[0].first.to_string() << std::endl;	
 	for(unsigned int t=1; t<nt; ++t) {
-	  oss << "+" << contr_[t].second << " * " << contr_[t].first.to_string() << std::endl;
+	  oss << "+ " << contr_[t].second << " * " << contr_[t].first.to_string() << std::endl;
 	}
       }
       return oss.str();
@@ -111,6 +122,29 @@ namespace hyller {
 	for(unsigned int j=0; j<nb; ++j) {
 	  const Term& tb = B.term(j);
 	  result.add(ta.first*tb.first,ta.second*tb.second);
+	}
+      }
+      return result;
+    }
+  /// Returns an outer product of 2 contracted functions
+  template <typename BF, typename bf1, typename bf2>
+    ContractedBasisFunction<BF> operator^(const ContractedBasisFunction<bf1>& A,
+					  const ContractedBasisFunction<bf2>& B)
+    {
+      typedef ContractedBasisFunction<BF> CBF; 
+      typedef typename ContractedBasisFunction<bf1>::ContrTerm TermA;
+      typedef typename ContractedBasisFunction<bf2>::ContrTerm TermB;
+      typedef typename CBF::ContrTerm Term;
+      CBF result;
+      const unsigned int na = A.n();
+      const unsigned int nb = B.n();
+      for(unsigned int i=0; i<na; ++i) {
+	const TermA& ta = A.term(i);
+	const bf1& fa = ta.first;
+	for(unsigned int j=0; j<nb; ++j) {
+	  const TermB& tb = B.term(j);
+	  const bf2& fb = tb.first;
+	  result.add(fa^fb,ta.second*tb.second);
 	}
       }
       return result;

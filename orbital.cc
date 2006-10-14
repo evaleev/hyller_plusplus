@@ -5,6 +5,7 @@
 #include "hylleraas.h"
 #include "matrix.h"
 #include "except.h"
+#include <basisfn.h>
 
 using namespace hyller;
 
@@ -84,4 +85,20 @@ hyller::orbital_to_hylleraas(const Orbital& I, const Orbital& J, const Hylleraas
   }
 
   return X;
+}
+
+
+ContractedBasisFunction<Orbital>
+hyller::contract(const OrbitalWfn& wfn)
+{
+  const OrbitalBasisSet& basis = wfn.basis();
+  const std::vector<double>& coefs = wfn.coefs();
+  const unsigned int nbf = basis.nbf();
+  ContractedBasisFunction<Orbital> result;
+  for(int f=0; f<nbf; ++f) {
+    const Orbital& O = basis.bf(f);
+    // The product is in terms of non-normalized functions
+    result.add(O,coefs[f]*normConst(O));
+  }
+  return result;
 }

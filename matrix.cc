@@ -24,8 +24,8 @@ double normConst(const HylleraasBasisFunction& bfi)
    the angular part of the Jacobian is also included (see 8pi^2). The
    diagonal elements of S therefore equal 1.
  */
-double Overlap(const HylleraasBasisFunction& bfi,
-	       const HylleraasBasisFunction& bfj)
+double S(const HylleraasBasisFunction& bfi,
+	 const HylleraasBasisFunction& bfj)
 {
   const double eightpi2 = 8.0*M_PI*M_PI;
   double result = (0.25*(1+pow(-1,bfi.l+bfj.l))*(bfi.m+bfj.m+2*(bfi.l+bfj.l)+6)*fac(bfi.nlm()+bfj.nlm()+5)*
@@ -145,7 +145,7 @@ double normConst(const Orbital& bf)
 }
 
 // overlap of two one-electron basis functions
-double Overlap(const Orbital& bfi, const Orbital& bfj)
+double S(const Orbital& bfi, const Orbital& bfj)
 {
   const double zeta = bfi.zeta;
   double overlap = normConst(bfi) * normConst(bfj) * I(2.0*zeta,bfi.n+bfj.n+2);
@@ -173,18 +173,18 @@ double T(const Orbital& bfi, const Orbital& bfj)
 
 ////
 
-double Overlap(const SD& bfi, const SD& bfj)
+double S(const SD& bfi, const SD& bfj)
 {
   if (bfi.spin != bfj.spin) {
     return 0.0;
   }
   else {
-    double S11 = Overlap(*bfi.o1,*bfj.o1);
-    double S22 = Overlap(*bfi.o2,*bfj.o2);
+    double S11 = S(*bfi.o1,*bfj.o1);
+    double S22 = S(*bfi.o2,*bfj.o2);
     double S = S11*S22;
     if (samespin(bfi.spin)) {
-      double S12 = Overlap(*bfi.o1,*bfj.o2);
-      double S21 = Overlap(*bfi.o2,*bfj.o1);
+      double S12 = S(*bfi.o1,*bfj.o2);
+      double S21 = S(*bfi.o2,*bfj.o1);
       S -= S12*S21;
     }
     return S;
@@ -193,7 +193,7 @@ double Overlap(const SD& bfi, const SD& bfj)
 
 ////
 
-double Overlap(const CSF& bfi, const CSF& bfj)
+double S(const CSF& bfi, const CSF& bfj)
 {
   if (bfi.spin != bfj.spin) {
     return 0.0;
@@ -202,7 +202,7 @@ double Overlap(const CSF& bfi, const CSF& bfj)
     double S = 0.0;
     for(int di=0; di<bfi.nd; ++di) {
       for(int dj=0; dj<bfj.nd; ++dj) {
-	S += bfi.c[di] * bfj.c[dj] * Overlap(*bfi.d[di],*bfj.d[dj]);
+	S += bfi.c[di] * bfj.c[dj] * S(*bfi.d[di],*bfj.d[dj]);
       }
     }
 
@@ -266,8 +266,8 @@ double normConst(const GenHylleraasBasisFunction& bfi)
 }
 
 double
-Overlap(const GenHylleraasBasisFunction& bfi,
-	const GenHylleraasBasisFunction& bfj)
+S(const GenHylleraasBasisFunction& bfi,
+  const GenHylleraasBasisFunction& bfj)
 {
   if (bfi.spin != bfj.spin) 
     return 0.0;
@@ -303,7 +303,7 @@ V_en(const GenHylleraasBasisFunction& bfi,
   }
   {
     GenHylleraasBasisFunction bf22(bf2->spin,bf2->i-1,bf2->j,bf2->k,bf2->zeta1,bf2->zeta2);
-    V += normConst(*bf2) * Overlap(*bf1,bf22) / normConst(bf22);
+    V += normConst(*bf2) * S(*bf1,bf22) / normConst(bf22);
   }
   if (bfi.j < bfj.j) {
     bf1 = &bfi; bf2 = &bfj;
@@ -313,7 +313,7 @@ V_en(const GenHylleraasBasisFunction& bfi,
   }
   {
     GenHylleraasBasisFunction bf22(bf2->spin,bf2->i,bf2->j-1,bf2->k,bf2->zeta1,bf2->zeta2);
-    V += normConst(*bf2) * Overlap(*bf1,bf22) / normConst(bf22);
+    V += normConst(*bf2) * S(*bf1,bf22) / normConst(bf22);
   }
   return V;
 }
@@ -333,7 +333,7 @@ V_ee(const GenHylleraasBasisFunction& bfi,
     bf1 = &bfj; bf2 = &bfi;
   }
   GenHylleraasBasisFunction bf22(bf2->spin,bf2->i,bf2->j,bf2->k-1,bf2->zeta1,bf2->zeta2);
-  return normConst(*bf2) * Overlap(*bf1,bf22) / normConst(bf22);
+  return normConst(*bf2) * S(*bf1,bf22) / normConst(bf22);
 }
 
 /////////////

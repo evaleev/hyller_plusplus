@@ -15,7 +15,7 @@ namespace hyller {
 
     Wavefunction(const Basis& bs, const std::vector<double>& coefs) : bs_(bs), coefs_(coefs)
       {
-	if (bs_.num_bf() != coefs_.size())
+	if (bs_.nbf() != coefs_.size())
 	  throw std::runtime_error("Wavefunction::Wavefunction -- number of functions in basis does not match the size of the coefficient vector.");
       }
     ~Wavefunction() {}

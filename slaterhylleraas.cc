@@ -1,7 +1,9 @@
 
 #include <stdexcept>
+#include <sstream>
 #include "slaterhylleraas.h"
 #include "except.h"
+#include <orbital.h>
 
 using namespace hyller;
 
@@ -140,6 +142,35 @@ GenSlaterHylleraasBasisFunction::GenSlaterHylleraasBasisFunction(int ii, int jj,
     throw std::runtime_error("GenSlaterHylleraasBasisFunction::GenSlaterHylleraasBasisFunction -- negative gamma");
 }
 
+std::string
+GenSlaterHylleraasBasisFunction::to_string() const {
+  std::ostringstream oss;
+  if (i != 0) {
+    oss << "r_1^" << i << " * ";
+  }
+  if (j != 0) {
+    oss << "r_2^" << j << " * ";
+  }
+  if (k != 0) {
+    oss << "r_{12}^" << k << " * ";
+  }
+  
+  if (alpha == 0.0 && beta == 0.0 && gamma == 0.0)
+    return oss.str();
+  else {
+    oss << "e^{";
+  }
+  
+  if (alpha != 0.0)
+    oss << "-" << alpha << "*r_1";
+  if (beta != 0.0)
+    oss << "-" << beta << "*r_2";
+  if (gamma != 0.0)
+    oss << "-" << gamma << "*r_{12}";
+  oss << "}";
+  return oss.str();
+}
+
 bool
 hyller::operator==(const GenSlaterHylleraasBasisFunction& A, const GenSlaterHylleraasBasisFunction& B)
 {
@@ -162,6 +193,13 @@ GenSlaterHylleraasBasisFunction
 hyller::gen_r1r2r12_oper(int i, int j, int k)
 {
   return GenSlaterHylleraasBasisFunction(i,j,k,0.0,0.0,0.0);
+}
+
+GenSlaterHylleraasBasisFunction
+hyller::operator^(const Orbital& f1,
+		  const Orbital& f2)
+{
+  return GenSlaterHylleraasBasisFunction(f1.n,f2.n,0,f1.zeta,f2.zeta,0.0);
 }
 
 GenSlaterHylleraasBasisSet::GenSlaterHylleraasBasisSet(int ijk_max, int ijk_min, int ij_max, int k_max, double alpha, double beta, double gamma) :

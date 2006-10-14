@@ -17,6 +17,9 @@
 #include "projector.h"
 #include "wfn.h"
 #include "solve.h"
+#include "basis.h"
+#include "basisfn.h"
+#include <overlap.h>
 
 using namespace hyller;
 
@@ -42,6 +45,10 @@ namespace {
   void usage();
 
   void test_gsh();
+  void test_gen_basisfn();
+  void test_gen_basis();
+  void test_hf_2body(const OrbitalWfn& hfwfn);
+  void test_gen_energy();
 }
 
 int main(int argc, char **argv)
@@ -264,6 +271,25 @@ int main(int argc, char **argv)
     const Wfn& wfn = solveCi(bs,Z,root,false,threshold,maxiter);
   }
 
+  // test generic contracted functions
+  test_gen_basisfn();
+
+  /** Compute the energy using the wave function with following terms:
+      e^{-\zeta (r_1 + r_2)}
+      e^{-\zeta (r_1 + r_2)} e^{-\gamma r_{12}}
+      e^{-\zeta (r_1 + r_2)} (r_1^2 + r_2^2 - r_{12}^2)
+  */
+  test_gen_basis();
+
+#if !SKIP_HF
+  /** Re-Compute the HF energy using a 2-body functionality
+  */
+  test_hf_2body(hfwfn);
+#endif
+
+  // Test generic energy evaluator
+  test_gen_energy();
+
   tstop(outfile);
   ip_done();
   fclose(outfile);
@@ -408,7 +434,7 @@ compute_density_at_nucleus(const HylleraasWfn& wfn)
 HylleraasWfn&
 solvCi(HylleraasBasisSet& basis, double Z, int root_num, bool opt, double threshold, int maxiter)
 {
-  double **H,**S,**X,**temp,*evals;
+  double **H,**SS,**X,**temp,*evals;
   double E = 1.0;
   double E_old = 0.0;
   double Ed = 0.0;
@@ -430,19 +456,19 @@ solvCi(HylleraasBasisSet& basis, double Z, int root_num, bool opt, double thresh
       fflush(outfile);
     }
     if (iter == 1) {
-      S = block_matrix(nbf,nbf);
+      SS = block_matrix(nbf,nbf);
       for(int i=0;i<nbf;i++) {
 	const HylleraasBasisFunction& bfi = basis.bf(i);
         for(int j=0;j<=i;j++) {
 	  const HylleraasBasisFunction& bfj = basis.bf(j);
-	  S[i][j] = S[j][i] = Overlap(bfi,bfj);
+	  SS[i][j] = SS[j][i] = S(bfi,bfj);
 	}
       }
       fprintf(outfile,"\t Overlap matrix\n");
-      print_mat(S,nbf,nbf,outfile);
-      indDim = nbf - sq_sqrt(S,&X,nbf);
+      print_mat(SS,nbf,nbf,outfile);
+      indDim = nbf - sq_sqrt(SS,&X,nbf);
       fprintf(outfile,"\t%d basis functions are linearly independent\n",indDim);
-      free_block(S);
+      free_block(SS);
       fflush(outfile);
     }
     H = block_matrix(nbf,nbf);
@@ -528,7 +554,7 @@ solvCi(HylleraasBasisSet& basis, double Z, int root_num, bool opt, double thresh
       for(int j=0;j<nbf;j++) {
 	const HylleraasBasisFunction& bfj = basis.bf(j);
 	norm += coeff[i] * coeff[j] *
-	  Overlap(bfi,bfj);
+	  S(bfi,bfj);
       }
     }
     fprintf(outfile,"\tTEST: c^T * S * c = %10.9lf (should be 1.0)\n",norm);
@@ -542,7 +568,7 @@ solvCi(HylleraasBasisSet& basis, double Z, int root_num, bool opt, double thresh
 OrbitalWfn&
 solvHF(OrbitalBasisSet& basis, HylleraasBasisSet& hbs, double Z, double threshold, int maxiter, bool opt, int maxiter_zeta)
 {
-  double **Hc, **S,**X;
+  double **Hc, **SS,**X;
   double **Hee; // electron repulsion operator in basis of slater determinants
   double **F;   // Fock matrix
   double E = 1.0;
@@ -569,19 +595,19 @@ solvHF(OrbitalBasisSet& basis, HylleraasBasisSet& hbs, double Z, double threshol
       fflush(outfile);
     }
 
-    S = block_matrix(nbf,nbf);
+    SS = block_matrix(nbf,nbf);
     for(int i=0;i<nbf;i++) {
       const Orbital& bfi = basis.bf(i);
       for(int j=0;j<=i;j++) {
 	const Orbital& bfj = basis.bf(j);
-	S[i][j] = S[j][i] = Overlap(bfi,bfj);
+	SS[i][j] = SS[j][i] = S(bfi,bfj);
       }
     }
     fprintf(outfile,"\t Overlap matrix\n");
-    print_mat(S,nbf,nbf,outfile);
-    indDim = nbf - sq_sqrt(S,&X,nbf);
+    print_mat(SS,nbf,nbf,outfile);
+    indDim = nbf - sq_sqrt(SS,&X,nbf);
     fprintf(outfile,"\t%d basis functions are linearly independent\n",indDim);
-    free_block(S);
+    free_block(SS);
     fflush(outfile);
 
     //
@@ -730,7 +756,7 @@ solvHF(OrbitalBasisSet& basis, HylleraasBasisSet& hbs, double Z, double threshol
 	  const HylleraasBasisFunction& bfi = hbs.bf(i);
 	  for(int j=0;j<=i;j++) {
 	    const HylleraasBasisFunction& bfj = hbs.bf(j);
-	    I[i][j] = I[j][i] = Overlap(bfi,bfj);
+	    I[i][j] = I[j][i] = S(bfi,bfj);
 	  }
 	}
       }
@@ -810,13 +836,13 @@ solvHF(OrbitalBasisSet& basis, HylleraasBasisSet& hbs, double Z, double threshol
 	  for(int b2=0;b2<nbf;b2++,b12++) {
 	    int k12 = 0;
 	    for(int k1=0;k1<nbf;k1++) {
-	      double S11 = Overlap(basis.bf(b1),basis.bf(k1));
+	      double S11 = S(basis.bf(b1),basis.bf(k1));
 	      double F11 = F[b1][k1];
 	      for(int k2=0;k2<nbf;k2++,k12++) {
-		double S22 = Overlap(basis.bf(b2),basis.bf(k2));
+		double S22 = S(basis.bf(b2),basis.bf(k2));
 		double F22 = F[b2][k2];
 		H0s[b12][k12] = F11*S22 + F22*S11;
-		Ss[b12][k12] = Overlap(sbs.bf(b12),sbs.bf(k12));
+		Ss[b12][k12] = S(sbs.bf(b12),sbs.bf(k12));
 	      }
 	    }
 	  }
@@ -947,7 +973,7 @@ solvHF(OrbitalBasisSet& basis, HylleraasBasisSet& hbs, double Z, double threshol
       for(int j=0;j<nbf;j++) {
 	const Orbital& bfj = basis.bf(j);
 	norm += coeff[i] * coeff[j] *
-	  Overlap(bfi,bfj);
+	  S(bfi,bfj);
       }
     }
     fprintf(outfile,"\tTEST: c^T * S * c = %10.9lf (should be 1.0)\n",norm);
@@ -1011,7 +1037,7 @@ void test_gsh()
     std::cout << "Testing matrix elements of GenSlaterHylleraasBasisFunction (m=" << m <<")" << std::endl;
     HylleraasBasisFunction H000(0,0,0,zeta);
     HylleraasBasisFunction H00m(0,0,m,zeta);
-    const double S_ref = Overlap(H00m,H00m);
+    const double S_ref = S(H00m,H00m);
     const double uS_ref = S_ref / (normConst(H00m) * normConst(H00m));
     const double Ven_ref = V_en(H00m,H00m);
     const double Vee_ref = V_ee(H00m,H00m);
@@ -1090,21 +1116,266 @@ void test_gsh()
     const int i = 0;
     const int j = 0;
     const int k = 0;
-    const double alpha = 2.0;
-    const double beta = 2.0;
+    const double alpha = 200.0;
+    const double beta = 200.0;
     const double gamma = 0.0;
 
     GenSlaterHylleraasBasisFunction bf(i,j,k,alpha,beta,gamma);
     Orbital o2(j+k,beta);
     const double nc12 = NormConst(bf);
     const double nc2 = normConst(o2);
-    const double s2 = Overlap(o2,o2);
+    const double s2 = S(o2,o2);
     const double delta_r1 = DeltaR1(bf,bf);
     const double s = S(bf,bf);
     const double t = T(bf,bf);
     std::cout << "nc(2) = " << nc2 << " nc(12) = " << nc12 << " s2 = " << s2 << " <delta(r1)> = " << delta_r1 << " <S> = " << s << " <T> = "<< t << std::endl;
     std::cout << "<T - 2 delta(r1)> = " << nc12 * nc12 * (t - 2.0*delta_r1) << std::endl;
   }
+}
+
+void test_gen_basisfn()
+{
+  typedef GenSlaterHylleraasBasisFunction GSH;
+  typedef ContractedBasisFunction<GSH> CBF;
+
+  double alpha = 1.0;
+  double beta  = 2.0;
+  double gamma = 3.0;
+
+  std::cout << "Testing generic contracted basis functions" << std::endl;
+  CBF c;
+  c.add(GSH(0,1,0,alpha,beta,gamma),1.0);
+  c.add(GSH(0,0,1,alpha,beta,gamma),-1.0);
+  std::cout << "c:" << std::endl << c.to_string() << std::endl;
+  CBF d(c*c);
+  std::cout << "c*c:" << std::endl << d.to_string() << std::endl;
+  CBF e(d*c);
+  std::cout << "c*c*c:" << std::endl << e.to_string() << std::endl;
+}
+
+void test_gen_basis()
+{
+  typedef GenSlaterHylleraasBasisFunction GSH;
+  BasisSet<GSH> bs;
+
+  double alpha = 1.82;
+
+#if 0
+  // my 3-term wavefunction
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add r_{12} e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,0,1,alpha,alpha,0.0));
+  // Add (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.push_back(std::make_pair(GSH(2,0,0,alpha,alpha,0.0),+1.0));
+    bf.push_back(std::make_pair(GSH(0,2,0,alpha,alpha,0.0),+1.0));
+    bf.push_back(std::make_pair(GSH(0,0,2,alpha,alpha,0.0),-1.0));
+    bs.add(bf);
+  }
+#endif
+
+#if 0
+  // my 3-term wavefunction uncontracted
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add r_{12} e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,0,1,alpha,alpha,0.0));
+  // Add r_1^2 e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(2,0,0,alpha,alpha,0.0));
+  // Add r_2^2 e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,2,0,alpha,alpha,0.0));
+  // Add r_{12}^2 e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,0,2,alpha,alpha,0.0));
+#endif
+
+#if 1
+  // Hylleraas 3-term wave function
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add e^(- zeta r_1 - zeta r_2 - gamma r_{12})
+  bs.add(GSH(0,0,1,alpha,alpha,0.0));
+  // Add (r_1^2 + r_2^2 - 2 r_1 r_2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,2,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,1,0,alpha,alpha,0.0),-2.0);
+    bs.add(bf);
+  }
+#endif
+
+#if 0
+  // my 4-term wavefunction
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add r_{12} e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,0,1,alpha,alpha,0.0));
+  // Add (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,2,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,0,2,alpha,alpha,0.0),-1.0);
+    bs.add(bf);
+  }
+  // Add (r_1^2 + r_2^2 - 2 r_1 r_2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,2,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,1,0,alpha,alpha,0.0),-2.0);
+    bs.add(bf);
+  }
+#endif
+
+#if 0
+  // my 4-term wavefunction uncontracted
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add r_{12} e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,0,1,alpha,alpha,0.0));
+  // Add r_1 r_2 e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(1,1,0,alpha,alpha,0.0));
+  // Add r_1^2 e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(2,0,0,alpha,alpha,0.0));
+  // Add r_2^2 e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,2,0,alpha,alpha,0.0));
+  // Add r_{12}^2 e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,0,2,alpha,alpha,0.0));
+#endif
+
+#if 0
+  // Hartree-Fock-like wavefunction
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add r_1 e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(1,0,0,alpha,alpha,0.0));
+  // Add r_2 e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(0,1,0,alpha,alpha,0.0));
+  // Add r_1 r_2 e^(- zeta r_1 - zeta r_2)
+  bs.add(GSH(1,1,0,alpha,alpha,0.0));
+#endif
+
+
+  double** U = bs.coefs();
+  fprintf(outfile,"  -Contraction matrix for the test basis set\n");
+  print_mat(U,bs.nprim(),bs.nbf(),outfile);
+
+  solveCi<GSH>(bs,2.0,0);
+}
+
+void
+test_hf_2body(const OrbitalWfn& hfwfn)
+{
+  const double gamma = 1.0;
+  typedef GenSlaterHylleraasBasisFunction GSH;
+  typedef ContractedBasisFunction<GSH> CGSH;
+
+  const ContractedBasisFunction<Orbital> orb(contract(hfwfn));
+  const CGSH phi0(operator^<GSH,Orbital,Orbital>(orb,orb));
+  std::cout << "Hartree-Fock wave function (phi0):" << std::endl
+	    << phi0.to_string() << std::endl;
+  {
+    BasisSet<GSH> bs;
+    bs.add(phi0);
+    // should give the Hartree-Fock energy back
+    solveCi<GSH>(bs,2.0,0);
+  }
+
+    BasisSet<GSH> bs;
+  // Now try wave function like phi0 * (some linear combination)
+#if 1
+  // my 3-term wavefunction
+
+  // Add 1
+  CGSH t0(gen_r1r2r12_oper(0,0,0));
+  CGSH phi0t0(phi0*t0);
+  std::cout << "t0:" << std::endl
+	    << t0.to_string() << std::endl;
+  std::cout << "phi0 * t0:" << std::endl
+	    << phi0t0.to_string() << std::endl;
+  bs.add(phi0t0);
+
+  // Add e^{-gamma * r_{12})
+  //CGSH t1(GSH(0,0,0,0.0,0.0,gamma));
+  CGSH t1(GSH(0,0,1,0.0,0.0,0.0));
+  CGSH phi0t1(phi0*t1);
+  std::cout << "t1:" << std::endl
+	    << t1.to_string() << std::endl;
+  std::cout << "phi0 * t1:" << std::endl
+	    << phi0t1.to_string() << std::endl;
+  bs.add(phi0t1);
+
+  // Add (r_1^2 + r_2^2 - r_{12}^2)
+  {
+    CGSH t2;
+    t2.add(GSH(2,0,0,0.0,0.0,0.0),+1.0);
+    t2.add(GSH(0,2,0,0.0,0.0,0.0),+1.0);
+    t2.add(GSH(0,0,2,0.0,0.0,0.0),-1.0);
+    CGSH phi0t2(phi0*t2);
+    std::cout << "t2:" << std::endl
+	      << t2.to_string() << std::endl;
+    std::cout << "phi0 * t2:" << std::endl
+	      << phi0t2.to_string() << std::endl;
+    bs.add(phi0t2);
+  }
+
+  // Add r_{12}^2
+  CGSH t3(GSH(0,0,2,0.0,0.0,0.0));
+  CGSH phi0t3(phi0*t3);
+  std::cout << "t3:" << std::endl
+	    << t3.to_string() << std::endl;
+  std::cout << "phi0 * t3:" << std::endl
+	    << phi0t3.to_string() << std::endl;
+  bs.add(phi0t3);
+
+#endif
+  solveCi<GSH>(bs,2.0,0);
+
+}
+
+
+void test_gen_energy()
+{
+  typedef GenSlaterHylleraasBasisFunction GSH;
+  typedef BasisSet<GSH> Basis;
+  Ptr<Basis> bs(new Basis);
+
+  double alpha = 1.82;
+
+#if 1
+  // Hylleraas 3-term wave function
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add e^(- zeta r_1 - zeta r_2 - gamma r_{12})
+  bs->add(GSH(0,0,1,alpha,alpha,0.0));
+  // Add (r_1^2 + r_2^2 - 2 r_1 r_2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,2,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,1,0,alpha,alpha,0.0),-2.0);
+    bs->add(bf);
+  }
+#endif
+
+  Overlap<Basis> overlap(bs);
+  double** S = overlap();
+
 }
 
 };
