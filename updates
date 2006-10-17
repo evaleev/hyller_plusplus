@@ -1,4 +1,11 @@
 
+2006-10-16	Implemented crude Newton-Raphson optimizer. Introduced Clock to create timestamps
+		which automate the process of recomputing.
+
+2006-10-14	Introduced "inheritable" parameter sets. Defined the first parameterized
+		basis set (GSHBasisSet), generic abstract optimizer,
+		and outlined generic Newton-Raphson optimizer.
+
 2006-10-13      New additions -- generic energy, hamiltonian, overlap classes.
 		Started using boost::shared_ptr. Working toward generic
 		parameter optimizer.

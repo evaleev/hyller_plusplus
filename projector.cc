@@ -37,7 +37,7 @@ SD_2_Hylleraas::SD_2_Hylleraas(const SDBasisSet& sbs, const HylleraasBasisSet& h
     const HylleraasBasisFunction& bfi = hbs_.bf(i);
     for(int j=0; j<=i; j++) {
       const HylleraasBasisFunction& bfj = hbs_.bf(j);
-      Sh[i][j] = Sh[j][i] = Overlap(bfi,bfj);
+      Sh[i][j] = Sh[j][i] = S(bfi,bfj);
     }
   }
 
@@ -52,7 +52,7 @@ SD_2_Hylleraas::SD_2_Hylleraas(const SDBasisSet& sbs, const HylleraasBasisSet& h
   // compute overlap between slater determinants directly
   for(int d1=0; d1<nsd; ++d1) {
     for(int d2=0; d2<nsd; ++d2) {
-      Sd[d1][d2] = Overlap(sbs.bf(d1),sbs.bf(d2));
+      Sd[d1][d2] = S(sbs.bf(d1),sbs.bf(d2));
     }
   }
   fprintf(outfile,"\t Overlap matrix in slater determinant basis computed directly\n");
@@ -112,7 +112,7 @@ CSF_2_Hylleraas::CSF_2_Hylleraas(const CSFBasisSet& cbs, const HylleraasBasisSet
     const HylleraasBasisFunction& bfi = hbs_.bf(i);
     for(int j=0; j<=i; j++) {
       const HylleraasBasisFunction& bfj = hbs_.bf(j);
-      Sh[i][j] = Sh[j][i] = Overlap(bfi,bfj);
+      Sh[i][j] = Sh[j][i] = S(bfi,bfj);
     }
   }
 
@@ -127,7 +127,7 @@ CSF_2_Hylleraas::CSF_2_Hylleraas(const CSFBasisSet& cbs, const HylleraasBasisSet
   // compute overlap between CSFs directly
   for(int c1=0; c1<ncsf; ++c1) {
     for(int c2=0; c2<ncsf; ++c2) {
-      Sd[c1][c2] = Overlap(cbs.bf(c1),cbs.bf(c2));
+      Sd[c1][c2] = S(cbs.bf(c1),cbs.bf(c2));
     }
   }
   fprintf(outfile,"\t Overlap matrix in CSF basis computed directly\n");

@@ -11,7 +11,10 @@ namespace hyller {
   // Should probably at least derive SafePtr from shared_ptr
 #define Ptr boost::shared_ptr
 #define EnablePtrFromThis boost::enable_shared_from_this
-#define Ptr_from_this boost::shared_from_this
+#define Ptr_from_this shared_from_this
+
+  using boost::static_pointer_cast;
+  using boost::const_pointer_cast;
 
   /** Can be used to determine whether a type is a Ptr */
   template <typename T>

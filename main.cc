@@ -6,20 +6,25 @@
 
 #include <iostream>
 #include <stdexcept>
+
 #include "defines.h"
 #include "includes.h"
-#include "matrix.h"
 #include "polynom.h"
 #include "misc.h"
 #include "hylleraas.h"
 #include "slaterhylleraas.h"
-#include "matrix.timpl.h"
 #include "projector.h"
-#include "wfn.h"
-#include "solve.h"
-#include "basis.h"
-#include "basisfn.h"
-#include <overlap.h>
+
+#include <matrix.h>
+#include <matrix.timpl.h>
+#include <wfn.h>
+#include <solve.h>
+#include <basis.h>
+#include <gsh_basissets.h>
+#include <basisfn.h>
+#include <hamiltonian.h>
+#include <energy.h>
+#include <optimizer.h>
 
 using namespace hyller;
 
@@ -1349,14 +1354,16 @@ test_hf_2body(const OrbitalWfn& hfwfn)
 
 void test_gen_energy()
 {
-  typedef GenSlaterHylleraasBasisFunction GSH;
-  typedef BasisSet<GSH> Basis;
-  Ptr<Basis> bs(new Basis);
-
   double alpha = 1.82;
+  double gamma = 0.25;
+  double Z = 2.0;
+
+  typedef GenSlaterHylleraasBasisFunction GSH;
+  typedef SymmGSHBasisSet Basis;
 
 #if 1
   // Hylleraas 3-term wave function
+  Ptr<Basis> bs(new Basis(alpha,0.0,true,false));
 
   // Add e^(- zeta r_1 - zeta r_2)
   bs->add(GSH(0,0,0,alpha,alpha,0.0));
@@ -1373,9 +1380,44 @@ void test_gen_energy()
   }
 #endif
 
-  Overlap<Basis> overlap(bs);
-  double** S = overlap();
+#if 0
+  // my 3-term wavefunction
+  Ptr<Basis> bs(new Basis(alpha,gamma,true,true));
 
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,0,alpha,alpha,gamma));
+  // Add r_{12} e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,1,alpha,alpha,gamma));
+  // Add (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,0,alpha,alpha,gamma),+1.0);
+    bf.add(GSH(0,2,0,alpha,alpha,gamma),+1.0);
+    bf.add(GSH(0,0,2,alpha,alpha,gamma),-1.0);
+    bs->add(bf);
+  }
+#endif
+
+#if 0
+  typedef Overlap<Basis> Overlap;
+  Ptr<Overlap> s(new Overlap(bs));
+  (*s)();
+#endif
+
+#if 1
+  // we'll use this Hamiltonian ...
+  typedef TwoBodyHamiltonian<Basis> Hamiltonian;
+  Ptr<Hamiltonian> h(new Hamiltonian(bs,Z));
+  //(*h)();
+  // to get energy variationally ...
+  typedef EigenEnergy<Hamiltonian> Energy;
+  Ptr<Energy> energy(new Energy(0,h));
+  // and optimize (basis set) parameters using Newton-Raphson method 
+  typedef NewtonRaphsonOptimizer<Energy> Optimizer;
+  Ptr<Optimizer> optimizer(new Optimizer(energy,1e-9,1e-3));
+  optimizer->optimize();
+#endif
 }
 
 };

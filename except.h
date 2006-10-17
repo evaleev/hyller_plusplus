@@ -14,6 +14,14 @@ namespace hyller {
     const char* what() const throw();
   };
 
+  /// basis function parameters do not match the basis set parameters
+  class InvalidBasisFunctionParams : public std::exception {
+  public:
+    InvalidBasisFunctionParams();
+    ~InvalidBasisFunctionParams() throw();
+    const char* what() const throw();
+  };
+
 };
 
 #endif

@@ -2,6 +2,7 @@
 #ifndef _hyller_basisfn_h_
 #define _hyller_basisfn_h_
 
+#include <vector>
 #include <sstream>
 #include <algorithm>
 #include <utility>
@@ -36,6 +37,8 @@ namespace hyller {
     unsigned int n() const { return contr_.size(); }
     /// Return the n-th term
     const ContrTerm& term(unsigned int n) const { return (safe ? contr_.at(n) : contr_[n]); }
+    /// Sets the n-th term
+    void term(unsigned int n, const ContrTerm& t) { safe ? (contr_.at(n) = t): (contr_[n] = t); }
 
     /// Add a term. If this primitive exists -- simply add the coefficient (if SafeAddPolicy is false) or throw (if SafeAddPolicy is true)
     void add(const ContrTerm& c) {

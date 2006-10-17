@@ -3,6 +3,9 @@
 #define _hyller_misc_h_
 
 #include <vector>
+#include <algorithm>
+#include <stdexcept>
+
 #include "defines.h"
 
 namespace hyller {
@@ -82,6 +85,56 @@ namespace hyller {
   double** UVUt(double** U, double**V, int i, int o);
   /** (allocates and) computes U^t.v -- U is i by o, v is i long */
   double* Utv(double** U, double* v, int i, int o);
+
+  /// Converts a vector<T> to T* (memory is allocated using new)
+  template <typename T> T* to_C_array(const std::vector<T>& v) {
+    const unsigned int rank = v.size();
+    if (rank) {
+      T* d = new T[rank];
+      std::copy(v.begin(),v.end(),d);
+      return d;
+    }
+    return (T*)0;
+  }
+  /// Converts a vector< vector<T> > to T** (memory is allocated as a block (see block_matrix()) using new)
+  template <typename T> T** to_C_array(const std::vector< std::vector<T> >& v) {
+    const unsigned int nrow = v.size();
+    if (nrow) {
+      const unsigned int ncol = v[0].size();
+      if (ncol) {
+	// check that all rows have the same number of columns
+	for(unsigned int r=0; r<nrow; ++r) {
+	  if (v[r].size() != ncol)
+	    throw std::runtime_error("to_C_array() -- all rows must have the same number of columns");
+	}
+	// allocate a block matrix
+	T** d = new T*[nrow];
+	d[0] = new T[nrow*ncol];
+	for(unsigned int r=1; r<nrow; ++r)
+	  d[r] = d[r-1] + ncol;
+	for(unsigned int r=0; r<nrow; ++r) {
+	  std::copy(v[r].begin(),v[r].end(),d[r]);
+	}
+	return d;
+      }
+      return (T**)0;
+    }
+    return (T**)0;
+  }
+
+  /// Norm of a vector<T>
+  template <typename T>
+  T norm(const std::vector<T>& v) {
+    T norm2 = 0.0;
+    typedef typename std::vector<T>::const_iterator citer;
+    citer vend = v.end();
+    for(citer i=v.begin(); i!=vend; ++i) {
+      norm2 += (*i)*(*i);
+    }
+    T norm = sqrt(norm2);
+    return norm;
+  }
+
 };
 
 #endif

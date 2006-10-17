@@ -181,13 +181,13 @@ double S(const SD& bfi, const SD& bfj)
   else {
     double S11 = S(*bfi.o1,*bfj.o1);
     double S22 = S(*bfi.o2,*bfj.o2);
-    double S = S11*S22;
+    double SS = S11*S22;
     if (samespin(bfi.spin)) {
       double S12 = S(*bfi.o1,*bfj.o2);
       double S21 = S(*bfi.o2,*bfj.o1);
-      S -= S12*S21;
+      SS -= S12*S21;
     }
-    return S;
+    return SS;
   }
 }
 
@@ -199,14 +199,14 @@ double S(const CSF& bfi, const CSF& bfj)
     return 0.0;
   }
   else {
-    double S = 0.0;
+    double SS = 0.0;
     for(int di=0; di<bfi.nd; ++di) {
       for(int dj=0; dj<bfj.nd; ++dj) {
-	S += bfi.c[di] * bfj.c[dj] * S(*bfi.d[di],*bfj.d[dj]);
+	SS += bfi.c[di] * bfj.c[dj] * S(*bfi.d[di],*bfj.d[dj]);
       }
     }
 
-    return S;
+    return SS;
   }
 }
 

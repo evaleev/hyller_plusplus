@@ -15,7 +15,7 @@ LIBSPATH = -L$(PSIROOT)/lib -L$(GSLPATH)/lib
 INCLUDES = -I$(PSIROOT)/include -I$(GSLPATH)/include/gsl -I.
 
 CXXSRC = main.cc matrix.cc polynom.cc misc.cc hylleraas.cc slaterhylleraas.cc orbital.cc \
-projector.cc determinant.cc csf.cc except.cc
+projector.cc determinant.cc csf.cc except.cc gsh_basissets.cc clock.cc
 CXXOBJ = $(CXXSRC:%.cc=%.o)
 
 $(CODE): $(CXXOBJ) 
