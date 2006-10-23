@@ -28,14 +28,16 @@ namespace {
     const double beta = params->param(1).value();
     const double gamma = params->param(2).value();
 
-    bool result = (bf.gamma == gamma && ( (bf.alpha == alpha && bf.beta == beta) ||
-					  (bf.alpha == beta && bf.beta == alpha) ));
+    bool result = ( (bf.gamma == gamma || bf.gamma == 0.0) && ( (bf.alpha == alpha && bf.beta == beta) ||
+								(bf.alpha == beta && bf.beta == alpha) ));
     return result;
   }
   inline void set_primbf_params(PrimBF& bf, double alpha, double beta, double gamma) {
     bf.alpha = alpha;
     bf.beta  = beta;
-    bf.gamma = gamma;
+    // do not change gamma is it's zero
+    if (bf.gamma != 0.0)
+      bf.gamma = gamma;
   }
 }
 }
@@ -97,7 +99,7 @@ namespace symmgsh{
     const double alpha = params->param(0).value();
     const double gamma = params->param(1).value();
 
-    bool result = (bf.gamma == gamma && (bf.alpha == alpha && bf.beta == alpha));
+    bool result = ((bf.gamma == gamma || bf.gamma == 0.0) && (bf.alpha == alpha && bf.beta == alpha));
     return result;
   }
 }
