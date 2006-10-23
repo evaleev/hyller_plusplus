@@ -2,6 +2,9 @@
 #ifndef _hyller_optimizer_h_
 #define _hyller_optimizer_h_
 
+#define DIAG_HESSIAN 0
+#define USE_SYMM_MIX_DERIV 1
+
 namespace hyller {
 
   /// Optimizes functions of type F
@@ -51,8 +54,9 @@ namespace hyller {
     typedef Optimizer<F> BaseOptimizer;
 #include <baseoptimizer_typedefs.h>
 
-    NewtonRaphsonOptimizer(const Ptr<Function>& f, const Tolerance& tol, const ParamType& disp) : BaseOptimizer(f), disp_(disp) {
+    NewtonRaphsonOptimizer(const Ptr<Function>& f, const Tolerance& tol, const ParamType& disp, const unsigned int max_niter) : BaseOptimizer(f), disp_(disp) {
       BaseOptimizer::tolerance(tol);
+      BaseOptimizer::max_niter(max_niter);
     }
     ~NewtonRaphsonOptimizer() {
     }
@@ -143,44 +147,56 @@ namespace hyller {
 	  if (nparam_to_opt == 2) {
 
 	    const double disp = disp_;
-	    unsigned int p;
 
 	    Value e0 = func->operator()();
 
-	    p = map_param_opt_to_all[0];
-	    Parameter param0 = func->param(p);
+	    const unsigned int p0 = map_param_opt_to_all[0];
+	    Parameter param0 = func->param(p0);
 
-	    param0 += disp;  func->param(p,param0);
+	    param0 += disp;  func->param(p0,param0);
 	    Value e_0p1 = func->operator()();
-	    param0 += -disp;  func->param(p,param0);
+	    param0 += -disp;  func->param(p0,param0);
 
-	    param0 += -disp;  func->param(p,param0);
+	    param0 += -disp;  func->param(p0,param0);
 	    Value e_0m1 = func->operator()();
-	    param0 += disp;  func->param(p,param0);
+	    param0 += disp;  func->param(p0,param0);
 
-	    p = map_param_opt_to_all[1];
-	    Parameter param1 = func->param(p);
+	    const unsigned int p1 = map_param_opt_to_all[1];
+	    Parameter param1 = func->param(p1);
 
-	    param1 += disp;  func->param(p,param1);
+	    param1 += disp;  func->param(p1,param1);
 	    Value e_1p1 = func->operator()();
-	    param1 += -disp;  func->param(p,param1);
+	    param1 += -disp;  func->param(p1,param1);
 
-	    param1 += -disp;  func->param(p,param1);
+	    param1 += -disp;  func->param(p1,param1);
 	    Value e_1m1 = func->operator()();
-	    param1 += disp;  func->param(p,param1);
+	    param1 += disp;  func->param(p1,param1);
 
-	    param0 += disp;  func->param(p,param0);
-	    param1 += disp;  func->param(p,param1);
+	    param0 += disp;  func->param(p0,param0);
+	    param1 += disp;  func->param(p1,param1);
 	    Value e_01p1 = func->operator()();
-	    param0 += -disp;  func->param(p,param0);
-	    param1 += -disp;  func->param(p,param1);
+	    param0 += -disp;  func->param(p0,param0);
+	    param1 += -disp;  func->param(p1,param1);
 
-	    param0 += -disp;  func->param(p,param0);
-	    param1 += -disp;  func->param(p,param1);
+	    param0 += -disp;  func->param(p0,param0);
+	    param1 += -disp;  func->param(p1,param1);
 	    Value e_01m1 = func->operator()();
-	    param0 += disp;  func->param(p,param0);
-	    param1 += disp;  func->param(p,param1);
+	    param0 += disp;  func->param(p0,param0);
+	    param1 += disp;  func->param(p1,param1);
 
+#if USE_SYMM_MIX_DERIV
+	    param0 += disp;  func->param(p0,param0);
+	    param1 += -disp;  func->param(p1,param1);
+	    Value e_01pm = func->operator()();
+	    param0 += -disp;  func->param(p0,param0);
+	    param1 += disp;  func->param(p1,param1);
+
+	    param0 += -disp;  func->param(p0,param0);
+	    param1 += disp;  func->param(p1,param1);
+	    Value e_01mp = func->operator()();
+	    param0 += disp;  func->param(p0,param0);
+	    param1 += -disp;  func->param(p1,param1);
+#endif
 
 	    Value d1_0 = (e_0p1 - e_0m1)/(2.0*disp);
 	    grad.push_back(d1_0);
@@ -189,8 +205,14 @@ namespace hyller {
 
 	    Value d2_00 = (e_0p1 + e_0m1 - 2.0*e0)/(disp*disp);
 	    Value d2_11 = (e_1p1 + e_1m1 - 2.0*e0)/(disp*disp);
-#if 0
-	    Value d2_01 = (e_01p1 + e_01m1)/(2.0*disp*disp) - 0.5*(d2_00 + d2_11);
+#if !DIAG_HESSIAN
+#if USE_SYMM_MIX_DERIV
+	    Value d2_01 = (e_01p1 + e_01m1 - e_01pm - e_01mp)/(4.0*disp*disp);
+	    Value d2_01_nonsymm = (e_01p1 + e_01m1 - 2.0*e0)/(2.0*disp*disp) - 0.5*(d2_00 + d2_11);
+	    std::cout << "symm = " << d2_01 <<  "  nonsymm = " << d2_01_nonsymm << std::endl;
+#else
+	    Value d2_01 = (e_01p1 + e_01m1 - 2.0*e0)/(2.0*disp*disp) - 0.5*(d2_00 + d2_11);
+#endif
 	    Value d2_10 = d2_01;
 #else
 	    Value d2_01 = 0.0;
@@ -245,6 +267,13 @@ namespace hyller {
 	  for(unsigned int i=0; i<nparam_to_opt; ++i)
 	    step[i] *= -1.0;
 
+	  // update parameters
+	  for(unsigned int p=0; p<nparam_to_opt; ++p) {
+	    const unsigned int pp = map_param_opt_to_all[p];
+	    Parameter param = func->param(pp);
+	    param += step[p];  func->param(pp,param);
+	  }
+
 	  // print a summary of a step
 	  fprintf(outfile,"  -Summary of step %d\n", iter);
 	  fprintf(outfile,"  Param  Old Value  Gradient  New Value\n");
@@ -254,20 +283,13 @@ namespace hyller {
 	    Value value = func->param(p).value();
 	    if (func->param(p).mut_able()) {
 	      fprintf(outfile,"  %3d    %9.5lf  %8.4e  %9.5lf\n",
-		      p,value,grad[p_opt],value+step[p_opt]);
+		      p,value-step[p_opt],grad[p_opt],value);
 	      ++p_opt;
 	    }
 	    else {
 	      fprintf(outfile,"  %3d    %9.5lf  =========  =========\n",
 		      p,value);
 	    }
-	  }
-
-	  // update parameters
-	  for(unsigned int p=0; p<nparam_to_opt; ++p) {
-	    const unsigned int pp = map_param_opt_to_all[p];
-	    Parameter param = func->param(pp);
-	    param += step[p];  func->param(pp,param);
 	  }
 
 	  ++iter;
