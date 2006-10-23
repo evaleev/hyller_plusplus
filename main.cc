@@ -1299,9 +1299,9 @@ test_hf_2body(const OrbitalWfn& hfwfn)
     solveCi<GSH>(bs,2.0,0);
   }
 
-    BasisSet<GSH> bs;
+  BasisSet<GSH> bs;
   // Now try wave function like phi0 * (some linear combination)
-#if 1
+#if 0
   // my 3-term wavefunction
 
   // Add 1
@@ -1313,8 +1313,7 @@ test_hf_2body(const OrbitalWfn& hfwfn)
 	    << phi0t0.to_string() << std::endl;
   bs.add(phi0t0);
 
-  // Add e^{-gamma * r_{12})
-  //CGSH t1(GSH(0,0,0,0.0,0.0,gamma));
+  // Add r_{12}
   CGSH t1(GSH(0,0,1,0.0,0.0,0.0));
   CGSH phi0t1(phi0*t1);
   std::cout << "t1:" << std::endl
@@ -1337,16 +1336,46 @@ test_hf_2body(const OrbitalWfn& hfwfn)
     bs.add(phi0t2);
   }
 
-  // Add r_{12}^2
-  CGSH t3(GSH(0,0,2,0.0,0.0,0.0));
-  CGSH phi0t3(phi0*t3);
-  std::cout << "t3:" << std::endl
-	    << t3.to_string() << std::endl;
-  std::cout << "phi0 * t3:" << std::endl
-	    << phi0t3.to_string() << std::endl;
-  bs.add(phi0t3);
+#endif
+
+#if 1
+  // Hylleraas 3-term function
+
+  // Add 1
+  CGSH t0(gen_r1r2r12_oper(0,0,0));
+  CGSH phi0t0(phi0*t0);
+  std::cout << "t0:" << std::endl
+	    << t0.to_string() << std::endl;
+  std::cout << "phi0 * t0:" << std::endl
+	    << phi0t0.to_string() << std::endl;
+  bs.add(phi0t0);
+
+  // Add r_{12}
+  CGSH t1(GSH(0,0,1,0.0,0.0,0.0));
+  CGSH phi0t1(phi0*t1);
+  std::cout << "t1:" << std::endl
+	    << t1.to_string() << std::endl;
+  std::cout << "phi0 * t1:" << std::endl
+	    << phi0t1.to_string() << std::endl;
+  bs.add(phi0t1);
+
+  // Add (r_1^2 + r_2^2 - 2 r_1 r_2)
+  {
+    CGSH t2;
+    t2.add(GSH(2,0,0,0.0,0.0,0.0),+1.0);
+    t2.add(GSH(0,2,0,0.0,0.0,0.0),+1.0);
+    t2.add(GSH(1,1,0,0.0,0.0,0.0),-2.0);
+    CGSH phi0t2(phi0*t2);
+    std::cout << "t2:" << std::endl
+	      << t2.to_string() << std::endl;
+    std::cout << "phi0 * t2:" << std::endl
+	      << phi0t2.to_string() << std::endl;
+    bs.add(phi0t2);
+  }
 
 #endif
+
+
   solveCi<GSH>(bs,2.0,0);
 
 }
@@ -1354,20 +1383,20 @@ test_hf_2body(const OrbitalWfn& hfwfn)
 
 void test_gen_energy()
 {
-  double alpha = 1.82;
-  double gamma = 0.25;
+  double alpha = 1.81607;
+  double gamma = 0.00;
   double Z = 2.0;
 
   typedef GenSlaterHylleraasBasisFunction GSH;
   typedef SymmGSHBasisSet Basis;
 
-#if 1
+#if 0
   // Hylleraas 3-term wave function
   Ptr<Basis> bs(new Basis(alpha,0.0,true,false));
 
   // Add e^(- zeta r_1 - zeta r_2)
   bs->add(GSH(0,0,0,alpha,alpha,0.0));
-  // Add e^(- zeta r_1 - zeta r_2 - gamma r_{12})
+  // Add r_{12} e^(- zeta r_1 - zeta r_2)
   bs->add(GSH(0,0,1,alpha,alpha,0.0));
   // Add (r_1^2 + r_2^2 - 2 r_1 r_2) e^(- zeta r_1 - zeta r_2)
   {
@@ -1381,20 +1410,161 @@ void test_gen_energy()
 #endif
 
 #if 0
-  // my 3-term wavefunction
-  Ptr<Basis> bs(new Basis(alpha,gamma,true,true));
+  // Hylleraas 3-term analog with en exponential instead of r12
+  bool mutable_gamma = (gamma == 0.0)?false:true;
+  Ptr<Basis> bs(new Basis(alpha,gamma,true,mutable_gamma));
 
   // Add e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add e^(- zeta r_1 - zeta r_2 - gamma r_{12})
   bs->add(GSH(0,0,0,alpha,alpha,gamma));
+  // Add (r_1^2 + r_2^2 - 2 r_1 r_2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,2,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,1,0,alpha,alpha,0.0),-2.0);
+    bs->add(bf);
+  }
+#endif
+
+#if 0
+  // my 3-term wavefunction
+  bool mutable_gamma = (gamma == 0.0)?false:true;
+  Ptr<Basis> bs(new Basis(alpha,gamma,true,mutable_gamma));
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,0,alpha,alpha,0.0));
   // Add r_{12} e^(- zeta r_1 - zeta r_2)
-  bs->add(GSH(0,0,1,alpha,alpha,gamma));
+  bs->add(GSH(0,0,1,alpha,alpha,0.0));
   // Add (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
   {
     typedef BasisSet<GSH>::ContrBF BF;
     BF bf;
-    bf.add(GSH(2,0,0,alpha,alpha,gamma),+1.0);
-    bf.add(GSH(0,2,0,alpha,alpha,gamma),+1.0);
-    bf.add(GSH(0,0,2,alpha,alpha,gamma),-1.0);
+    bf.add(GSH(2,0,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,2,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,0,2,alpha,alpha,0.0),-1.0);
+    bs->add(bf);
+  }
+#endif
+
+#if 0
+  // my trial wave function: (1 + r1r2) (1 + r12)
+  Ptr<Basis> bs(new Basis(alpha,0.0,true,false));
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add r_{12} e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,1,alpha,alpha,0.0));
+  // Add r_1 r_2 e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(1,1,0,alpha,alpha,0.0));
+  // Add r_1 r_2 r_{12} e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(1,1,1,alpha,alpha,0.0));
+#endif
+
+#if 0
+  // my trial wave function: (1 + r1r2) (1 + r1 \dot r2)
+  Ptr<Basis> bs(new Basis(alpha,0.0,true,false));
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add r_1 r_2 e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(1,1,0,alpha,alpha,0.0));
+  // Add (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,2,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,0,2,alpha,alpha,0.0),-1.0);
+    bs->add(bf);
+  }
+  // Add r_1 r_2 (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(3,1,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,3,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,1,2,alpha,alpha,0.0),-1.0);
+    bs->add(bf);
+  }
+#endif
+
+#if 0
+  // my trial wave function: (1 + r1 \dot r2) (1 + r12)
+  Ptr<Basis> bs(new Basis(alpha,0.0,true,false));
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add r_{12} e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,1,alpha,alpha,0.0));
+  // Add (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,2,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,0,2,alpha,alpha,0.0),-1.0);
+    bs->add(bf);
+  }
+  // Add r_{12} (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,1,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,2,1,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,0,3,alpha,alpha,0.0),-1.0);
+    bs->add(bf);
+  }
+#endif
+
+#if 1
+  // my trial wave function: (1 + r1r2) (1 + r1 \dot r2) (1 + r12)
+  Ptr<Basis> bs(new Basis(alpha,0.0,true,false));
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add r_{12} e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,1,alpha,alpha,0.0));
+  // Add r_1 r_2 e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(1,1,0,alpha,alpha,0.0));
+  // Add (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,2,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,0,2,alpha,alpha,0.0),-1.0);
+    bs->add(bf);
+  }
+  // Add r_{12} (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,1,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,2,1,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,0,3,alpha,alpha,0.0),-1.0);
+    bs->add(bf);
+  }
+  // Add r_1 r_2 (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(3,1,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,3,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,1,2,alpha,alpha,0.0),-1.0);
+    bs->add(bf);
+  }
+  // Add r_1 r_2 r_{12} e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(1,1,1,alpha,alpha,0.0));
+  // Add r_1 r_2 r_{12} (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(3,1,1,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,3,1,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,1,3,alpha,alpha,0.0),-1.0);
     bs->add(bf);
   }
 #endif
@@ -1413,9 +1583,10 @@ void test_gen_energy()
   // to get energy variationally ...
   typedef EigenEnergy<Hamiltonian> Energy;
   Ptr<Energy> energy(new Energy(0,h));
+  (*energy)();
   // and optimize (basis set) parameters using Newton-Raphson method 
   typedef NewtonRaphsonOptimizer<Energy> Optimizer;
-  Ptr<Optimizer> optimizer(new Optimizer(energy,1e-9,1e-3));
+  Ptr<Optimizer> optimizer(new Optimizer(energy,1e-9,1e-3,1000));
   optimizer->optimize();
 #endif
 }
