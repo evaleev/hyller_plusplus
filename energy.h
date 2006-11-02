@@ -98,7 +98,11 @@ namespace hyller {
 	  c += Xinv[j][i]*evals[j];
 	evec[i] = c;
       }
-	
+
+      fprintf(outfile,"\t-Eigenvector for root %d:\n", root_);
+      for(int i=0; i<nbf; i++)
+	fprintf(outfile,"\t%3d  %20.12lf\n",i+1,evec[i]);
+      
       free_block(X);
       free_block(Xinv);
 	

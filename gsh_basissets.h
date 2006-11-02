@@ -51,6 +51,10 @@ namespace hyller {
 
   };
 
+  /// Outer product of 2 basis sets is a set of every pairwise product
+  SymmGSHBasisSet operator^(const SymmGSHBasisSet& bs1,
+			    const SymmGSHBasisSet& bs2);
+
 };
 
 #endif

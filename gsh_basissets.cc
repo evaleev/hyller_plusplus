@@ -135,3 +135,15 @@ SymmGSHBasisSet::param(unsigned int i, const Parameter& p)
   // update contractions with the new primitives
   update_contr_with_prims();
 }
+
+
+////
+
+SymmGSHBasisSet
+hyller::operator^(const SymmGSHBasisSet& bs1,
+		  const SymmGSHBasisSet& bs2)
+{
+  const double alpha = bs1.params().param(0).value() + bs2.params().param(0).value();
+  const double gamma = bs1.params().param(1).value() + bs2.params().param(1).value();
+  SymmGSHBasisSet bs(alpha,gamma);
+}

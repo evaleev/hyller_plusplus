@@ -266,6 +266,7 @@ int main(int argc, char **argv)
   /*----------------------
     Test various features
    ----------------------*/
+#if !SKIP_TESTS
   test_gsh();
   {
     const double alpha = zeta/2;
@@ -292,6 +293,7 @@ int main(int argc, char **argv)
   test_hf_2body(hfwfn);
 #endif
 
+#endif // end of tests
   // Test generic energy evaluator
   test_gen_energy();
 
@@ -1519,7 +1521,7 @@ void test_gen_energy()
   }
 #endif
 
-#if 1
+#if 0
   // my trial wave function: (1 + r1r2) (1 + r1 \dot r2) (1 + r12)
   Ptr<Basis> bs(new Basis(alpha,0.0,true,false));
 
@@ -1565,6 +1567,108 @@ void test_gen_energy()
     bf.add(GSH(3,1,1,alpha,alpha,0.0),+1.0);
     bf.add(GSH(1,3,1,alpha,alpha,0.0),+1.0);
     bf.add(GSH(1,1,3,alpha,alpha,0.0),-1.0);
+    bs->add(bf);
+  }
+#endif
+
+#if 0
+  gamma = 0.05;
+  // my trial wave function: (1 + r1r2) (1 + r1 \dot r2) (1 + e^{-\gamma r_{12}})
+  Ptr<Basis> bs(new Basis(alpha,gamma,true,false));
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add e^{-\gamma r_{12}} e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,0,alpha,alpha,gamma));
+  // Add r_1 r_2 e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(1,1,0,alpha,alpha,0.0));
+  // Add (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,2,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,0,2,alpha,alpha,0.0),-1.0);
+    bs->add(bf);
+  }
+  // Add e^{-\gamma r_{12}} (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,0,alpha,alpha,gamma),+1.0);
+    bf.add(GSH(0,2,0,alpha,alpha,gamma),+1.0);
+    bf.add(GSH(0,0,2,alpha,alpha,gamma),-1.0);
+    bs->add(bf);
+  }
+  // Add r_1 r_2 (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(3,1,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,3,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,1,2,alpha,alpha,0.0),-1.0);
+    bs->add(bf);
+  }
+  // Add r_1 r_2 e^{-\gamma r_{12}} e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(1,1,0,alpha,alpha,gamma));
+  // Add r_1 r_2 e^{-\gamma r_{12}} (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(3,1,0,alpha,alpha,gamma),+1.0);
+    bf.add(GSH(1,3,0,alpha,alpha,gamma),+1.0);
+    bf.add(GSH(1,1,2,alpha,alpha,gamma),-1.0);
+    bs->add(bf);
+  }
+#endif
+
+#if 1
+  gamma = 0.10;
+  // my trial wave function: (1 + r1r2) (1 + r1 \dot r2) (1 + r_{12} e^{-\gamma r_{12}})
+  Ptr<Basis> bs(new Basis(alpha,gamma,true,false));
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add r_{12} e^{-\gamma r_{12}} e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,1,alpha,alpha,gamma));
+  // Add r_1 r_2 e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(1,1,0,alpha,alpha,0.0));
+  // Add (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,2,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(0,0,2,alpha,alpha,0.0),-1.0);
+    bs->add(bf);
+  }
+  // Add r_{12} e^{-\gamma r_{12}} (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(2,0,1,alpha,alpha,gamma),+1.0);
+    bf.add(GSH(0,2,1,alpha,alpha,gamma),+1.0);
+    bf.add(GSH(0,0,3,alpha,alpha,gamma),-1.0);
+    bs->add(bf);
+  }
+  // Add r_1 r_2 (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(3,1,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,3,0,alpha,alpha,0.0),+1.0);
+    bf.add(GSH(1,1,2,alpha,alpha,0.0),-1.0);
+    bs->add(bf);
+  }
+  // Add r_1 r_2 r_{12} e^{-\gamma r_{12}} e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(1,1,1,alpha,alpha,gamma));
+  // Add r_1 r_2 r_{12} e^{-\gamma r_{12}} (r_1^2 + r_2^2 - r_{12}^2) e^(- zeta r_1 - zeta r_2)
+  {
+    typedef BasisSet<GSH>::ContrBF BF;
+    BF bf;
+    bf.add(GSH(3,1,1,alpha,alpha,gamma),+1.0);
+    bf.add(GSH(1,3,1,alpha,alpha,gamma),+1.0);
+    bf.add(GSH(1,1,3,alpha,alpha,gamma),-1.0);
     bs->add(bf);
   }
 #endif
