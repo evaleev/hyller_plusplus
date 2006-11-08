@@ -29,6 +29,20 @@ namespace hyller {
     const double result = S(bra,oper*ket);
     return result;
   }
+  /** Matrix element of the r_1^i r_2^j r_{12}^k e^{- alpha * r_1 - beta * r_2 - gamma * r_{12} }
+      operator over unnormalized functions. Can only work for functions expressed in terms of r1, r2, and r12.
+      Must supply operator*(const GenSlaterHylleraasBasisFunction&, const F&).
+      Uses S(). */
+  template <typename F>
+    double gen_mult_oper(int i, int j, int k,
+			 double alpha, double beta, double gamma,
+			 const F& bra, const F& ket) {
+    // assuming that F is always contracted
+    typedef typename F::PrimBF PrimBF;
+    const F oper(PrimBF(i,j,k,alpha,beta,gamma));
+    const double result = S(bra,oper*ket);
+    return result;
+  }
   /** Matrix element of the electron repulsion operator (r_{12}^{-1}) over unnormalized functions. Uses S() and other functions. */
   template <typename F>
     double V_ee(const F& bra, const F& ket) {

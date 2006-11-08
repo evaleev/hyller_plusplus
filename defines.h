@@ -5,7 +5,7 @@
 /// Set to 1 to skip Hylleraas calculation
 #define SKIP_HYLLERAAS 0
 /// Set to 1 to skip Hartree-Fock calculation
-#define SKIP_HF 1
+#define SKIP_HF 0
 /// Set to 1 to skip tests
 #define SKIP_TESTS 1
 /// Set to 1 to test proper normalization of basis sets. Only useful for testing

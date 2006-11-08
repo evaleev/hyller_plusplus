@@ -142,6 +142,9 @@ GenSlaterHylleraasBasisFunction::GenSlaterHylleraasBasisFunction(int ii, int jj,
     throw std::runtime_error("GenSlaterHylleraasBasisFunction::GenSlaterHylleraasBasisFunction -- negative gamma");
 }
 
+GenSlaterHylleraasBasisFunction
+GenSlaterHylleraasBasisFunction::Identity(0,0,0,0.0,0.0,0.0);
+
 std::string
 GenSlaterHylleraasBasisFunction::to_string() const {
   std::ostringstream oss;

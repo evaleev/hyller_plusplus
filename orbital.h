@@ -56,7 +56,7 @@ namespace hyller {
     ~OrbitalWfn() {}
 
     const OrbitalBasisSet& basis() const { return bs_; }
-    const std::vector<double> coefs() const { return coefs_; }
+    const std::vector<double>& coefs() const { return coefs_; }
   private:
     const OrbitalBasisSet& bs_;
     std::vector<double> coefs_;

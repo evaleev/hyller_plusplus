@@ -171,6 +171,13 @@ double T(const Orbital& bfi, const Orbital& bfj)
   return t;
 }
 
+// 3-center electron repulsion
+double V_ee_3ct(const Orbital& bfi, const Orbital& bfj, const Orbital& bfk)
+{
+  const GenSlaterHylleraasBasisFunction gsh_Jijk(bfi.n,bfj.n+bfk.n,-1,bfi.zeta,bfj.zeta+bfk.zeta,0.0);
+  return S(GenSlaterHylleraasBasisFunction::Identity,gsh_Jijk);
+}
+
 ////
 
 double S(const SD& bfi, const SD& bfj)

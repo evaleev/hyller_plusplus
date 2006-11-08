@@ -99,6 +99,8 @@ namespace hyller {
   struct GenSlaterHylleraasBasisFunction {
     /// Regular coordinates are used
     static const int Coords = Coordinates::R1R2R12;
+    /// The identity function
+    static GenSlaterHylleraasBasisFunction Identity;
 
     /// Construct a dummy function
     GenSlaterHylleraasBasisFunction();

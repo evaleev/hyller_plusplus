@@ -61,6 +61,8 @@ namespace hyller {
   double S(const Orbital& bfi, const Orbital& bfj);
   double V_en(const Orbital& bfi, const Orbital& bfj);
   double T(const Orbital& bfi, const Orbital& bfj);
+  /// 3-center electron repulsion <i(1) j(2) k(2) 1/r12 >
+  double V_ee_3ct(const Orbital& bfi, const Orbital& bfj, const Orbital& bfk);
 
   /**
      matrix elements in determinant basis
@@ -105,6 +107,9 @@ namespace hyller {
   /** Matrix element of the r_1^i r_2^j r_{12}^k operator over unnormalized functions. Uses S(). */
   template <typename F>
     double gen_mult_oper(int i, int j, int k, const F& bra, const F& ket);
+  /** Matrix element of the r_1^i r_2^j r_{12}^k e^{- alpha * r_1 - beta * r_2 - gamma * r_{12} } operator over unnormalized functions. Uses S(). */
+  template <typename F>
+    double gen_mult_oper(int i, int j, int k, double alpha, double beta, double gamma, const F& bra, const F& ket);
   /** Matrix element of the electron repulsion operator (r_{12}^{-1}) over unnormalized functions. Uses S() and other functions. */
   template <typename F>
     double V_ee(const F& bra, const F& ket);

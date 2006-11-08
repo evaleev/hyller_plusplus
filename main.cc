@@ -25,6 +25,8 @@
 #include <hamiltonian.h>
 #include <energy.h>
 #include <optimizer.h>
+#include <mollerplesset.h>
+#include <mollerplesset.timpl.h>
 
 using namespace hyller;
 
@@ -54,6 +56,7 @@ namespace {
   void test_gen_basis();
   void test_hf_2body(const OrbitalWfn& hfwfn);
   void test_gen_energy();
+  void test_mpn(const OrbitalWfn& hfwfn);
 }
 
 int main(int argc, char **argv)
@@ -294,8 +297,14 @@ int main(int argc, char **argv)
 #endif
 
 #endif // end of tests
+
   // Test generic energy evaluator
   test_gen_energy();
+
+#if !SKIP_HF
+  // Test MPn series
+  test_mpn(hfwfn);
+#endif
 
   tstop(outfile);
   ip_done();
@@ -1693,6 +1702,23 @@ void test_gen_energy()
   Ptr<Optimizer> optimizer(new Optimizer(energy,1e-9,1e-3,1000));
   optimizer->optimize();
 #endif
+}
+
+
+void
+test_mpn(const OrbitalWfn& hfwfn)
+{
+  double alpha = 1.81607;
+  double gamma = 0.00;
+  double Z = 2.0;
+
+  typedef GenSlaterHylleraasBasisFunction GSH;
+  typedef SymmGSHBasisSet Basis;
+  Ptr<Basis> bs(new Basis(alpha,0.0,false,false));
+  Ptr<OrbitalWfn> hfptr(new OrbitalWfn(hfwfn));
+
+  MollerPlessetSeries<Basis> mpn_series(hfptr,bs);
+  mpn_series.compute();
 }
 
 };

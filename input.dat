@@ -17,8 +17,8 @@ hylleraas:(
    mult = 1
    root = 0
    %zopt = true
-   zeta = 3.64
-   %zeta = 3.375
+   %zeta = 3.64
+   zeta = 3.375
    %zeta= 5.2322
    %zeta = 1.0
    charge = 2.0
