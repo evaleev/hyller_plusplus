@@ -6,6 +6,7 @@
 #include "matrix.h"
 #include "except.h"
 #include <basisfn.h>
+#include <slaterhylleraas.h>
 
 using namespace hyller;
 
@@ -19,10 +20,18 @@ Orbital::Orbital(int nn, double zz) :
   }
 }
 
+Orbital Orbital::Identity;
+
 bool
 hyller::operator==(const Orbital& I, const Orbital& J)
 {
   return I.n==J.n && I.zeta==J.zeta;
+}
+
+Orbital
+hyller::operator*(const Orbital& I, const Orbital& J)
+{
+  return Orbital(I.n+J.n,I.zeta+J.zeta);
 }
 
 ////
@@ -49,8 +58,8 @@ OrbitalBasisSet::set_zeta(double zeta)
 
 ////
 
-OrbitalWfn::OrbitalWfn(const OrbitalBasisSet& bs, const std::vector<double>& coefs) :
-  bs_(bs), coefs_(coefs)
+OrbitalWfn::OrbitalWfn(const OrbitalBasisSet& bs, const std::vector<double>& coefs, double E) :
+  bs_(bs), coefs_(coefs), E_(E)
 {
   if (bs_.num_bf() != coefs_.size())
     throw std::runtime_error("OrbitalWfn::OrbitalWfn -- size of basis set and coefficient vector do not match");

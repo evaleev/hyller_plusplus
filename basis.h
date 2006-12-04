@@ -3,6 +3,9 @@
 #define _hyller_basis_h_
 
 #include <utility>
+extern "C" {
+#include <libciomr/libciomr.h>
+}
 #include <except.h>
 #include <basisfn.h>
 #include <params.h>
@@ -121,11 +124,14 @@ namespace hyller {
       const int nb = nbf();
 
       // allocate the matrix
-      double** C = new double*[np];
+      double** C = block_matrix(np,nb);
+#if 0
+      new double*[np];
       C[0] = new double[np*nb];
       for(unsigned int i=1; i<np; i++)
 	C[i] = C[i-1] + nb;
       memset((void*)C[0],0,np*nb*sizeof(double));
+#endif
 
       // convert coefs_ to C
       std::vector<ContrData>::const_iterator end = coefs_.end();

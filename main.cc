@@ -296,15 +296,15 @@ int main(int argc, char **argv)
   test_hf_2body(hfwfn);
 #endif
 
-#endif // end of tests
-
   // Test generic energy evaluator
-  test_gen_energy();
+  //test_gen_energy();
 
 #if !SKIP_HF
   // Test MPn series
   test_mpn(hfwfn);
 #endif
+
+#endif // end of tests
 
   tstop(outfile);
   ip_done();
@@ -996,7 +996,7 @@ solvHF(OrbitalBasisSet& basis, HylleraasBasisSet& hbs, double Z, double threshol
   }
 #endif
 
-  OrbitalWfn* wfn = new OrbitalWfn(basis,coeff);
+  OrbitalWfn* wfn = new OrbitalWfn(basis,coeff,E);
   return *wfn;
 }
 
@@ -1708,16 +1708,18 @@ void test_gen_energy()
 void
 test_mpn(const OrbitalWfn& hfwfn)
 {
-  double alpha = 1.81607;
+  double alpha = 1.6875;
   double gamma = 0.00;
   double Z = 2.0;
+  double lambda = 1.0;
 
   typedef GenSlaterHylleraasBasisFunction GSH;
   typedef SymmGSHBasisSet Basis;
   Ptr<Basis> bs(new Basis(alpha,0.0,false,false));
+  bs->add(4,0,10,10);
   Ptr<OrbitalWfn> hfptr(new OrbitalWfn(hfwfn));
 
-  MollerPlessetSeries<Basis> mpn_series(hfptr,bs);
+  MollerPlessetSeries<Basis> mpn_series(hfptr,bs,Z,lambda);
   mpn_series.compute();
 }
 

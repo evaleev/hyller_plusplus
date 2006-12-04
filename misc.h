@@ -83,8 +83,14 @@ namespace hyller {
   double** UtVU(double** U, double**V, int i, int o);
   /** (allocates and) computes U.V.U^t -- U is o by i, V is i by i */
   double** UVUt(double** U, double**V, int i, int o);
+  /** (allocates and) computes U^t.V.X -- U is i1 by o1, V is i1 by i2, X is i2 by o2 */
+  double** UtVX(double** U, int i1, int o1, double** V, double** X, int i2, int o2);
   /** (allocates and) computes U^t.v -- U is i by o, v is i long */
   double* Utv(double** U, double* v, int i, int o);
+  /** (allocates and) computes U.v -- U is o by i, v is i long */
+  double* Uv(double** U, double* v, int i, int o);
+  /** (allocates and) computes aA + bB */
+  double** add(int nrow, int ncol, double a, double** A, double b, double** B);
 
   /// Converts a vector<T> to T* (memory is allocated using new)
   template <typename T> T* to_C_array(const std::vector<T>& v) {

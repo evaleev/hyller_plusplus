@@ -21,6 +21,12 @@ namespace hyller {
       typedef double Norm;
       static T* invalid_value() { return (T*)-1; }
     };
+  /// Traits for std::pair<T,T>
+  template <typename T>
+    struct Traits< std::pair<T,T> > {
+      typedef typename Traits<T>::Norm Norm;
+      static std::pair<T,T> invalid_value() { return std::make_pair(Traits<T>::invalid_value(),Traits<T>::invalid_value()); }
+    };
 
 };
 

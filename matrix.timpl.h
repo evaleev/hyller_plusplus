@@ -37,9 +37,7 @@ namespace hyller {
     double gen_mult_oper(int i, int j, int k,
 			 double alpha, double beta, double gamma,
 			 const F& bra, const F& ket) {
-    // assuming that F is always contracted
-    typedef typename F::PrimBF PrimBF;
-    const F oper(PrimBF(i,j,k,alpha,beta,gamma));
+    const GenSlaterHylleraasBasisFunction oper(i,j,k,alpha,beta,gamma);
     const double result = S(bra,oper*ket);
     return result;
   }
@@ -159,6 +157,20 @@ namespace hyller {
     if (F::Coords == Coordinates::Hylleraas) {
       return T_Hylleraas(bra,ket);
     }
+  }
+
+  template <typename O, typename G>
+    double S1(const O& bra, const G& ket) {
+
+    G braG(bra^(O::Identity));
+    return S(braG,ket);
+  }
+
+  template <typename O, typename G>
+    double S2(const O& bra, const G& ket) {
+
+    G braG((O::Identity)^bra);
+    return S(braG,ket);
   }
 
 };

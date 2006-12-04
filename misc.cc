@@ -105,6 +105,16 @@ namespace hyller {
     return uvut;
   }
 
+  double** UtVX(double** U, int i1, int o1, double** V, double** X, int i2, int o2)
+  {
+    double** utv = block_matrix(o1,i2);
+    mmult(U,1,V,0,utv,0,o1,i1,i2,0);
+    double** utvx = block_matrix(o1,o2);
+    mmult(utv,0,X,0,utvx,0,o1,i2,o2,0);
+    free_block(utv);
+    return utvx;
+  }
+
   double* Utv(double** U, double* v, int i, int o)
   {
     double* utv = init_array(o);
@@ -112,6 +122,29 @@ namespace hyller {
       for(int c=0; c<o; c++)
 	utv[c] += U[r][c] * v[r];
     return utv;
+  }
+
+  double* Uv(double** U, double* v, int i, int o)
+  {
+    double* utv = init_array(o);
+    for(int r=0; r<i; r++)
+      for(int c=0; c<o; c++)
+	utv[c] += U[c][r] * v[r];
+    return utv;
+  }
+
+  double** add(int nrow, int ncol, double a, double** A, double b, double** B)
+  {
+    double** C = block_matrix(nrow,ncol);
+    double* aptr = &(A[0][0]);
+    double* bptr = &(B[0][0]);
+    double* cptr = &(C[0][0]);
+    for(unsigned int r=0; r<nrow; ++r) {
+      for(unsigned int c=0; c<ncol; ++c, ++aptr, ++bptr, ++cptr) {
+	*cptr += a*(*aptr) + b*(*bptr);
+      }
+    }
+    return C;
   }
 
 };

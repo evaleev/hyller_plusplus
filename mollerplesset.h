@@ -10,9 +10,12 @@ namespace hyller {
   public:
     typedef B Basis;
 
+    /// Z is the nuclear charge, lambda scales the perturbation operator
     MollerPlessetSeries(const Ptr<OrbitalWfn>& hfwfn,
-			const Ptr<Basis>& bs) :
-      hfwfn_(hfwfn), bs_(bs)
+			const Ptr<Basis>& bs,
+			double Z,
+			double lambda) :
+      hfwfn_(hfwfn), bs_(bs), Z_(Z), lambda_(lambda)
       {
       }
     ~MollerPlessetSeries() {
@@ -27,6 +30,8 @@ namespace hyller {
     Ptr<OrbitalWfn> hfwfn_;
     Ptr<Basis> bs_;
     Ptr<OrbitalBasisSet> fbs_;
+    double Z_;
+    double lambda_;
     unsigned int nmax_;
 
   };

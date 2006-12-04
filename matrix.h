@@ -129,6 +129,19 @@ namespace hyller {
   template <typename F>
     double DeltaR12(const F& bra, const F& ket);
 
+  /** Overlap between a 1-particle function bra of type O and a 2-particle function ket of type G.
+      Functions are not normalized. bra refers to particle 1.
+      Must have "G operator^(const O&, const O&)" and have defined O::Identity
+  */
+  template <typename O, typename G>
+    double S1(const O& bra, const G& ket);
+  /** Overlap between a 1-particle function bra of type O and a 2-particle function ket of type G.
+      Functions are not normalized. bra refers to particle 2.
+      Must have "G operator^(const O&, const O&)" and have defined O::Identity
+  */
+  template <typename O, typename G>
+    double S2(const O& bra, const G& ket);
+
 }
 
 #endif

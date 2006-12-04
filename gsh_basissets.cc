@@ -1,5 +1,6 @@
 
 #include <gsh_basissets.h>
+#include <orbital.h>
 #include <except.h>
 
 using namespace hyller;
@@ -119,6 +120,26 @@ SymmGSHBasisSet::add(const ContrBF& bf)
 }
 
 void
+SymmGSHBasisSet::add(int ijk_max, int ijk_min, int ij_max, int k_max)
+{
+  const double alpha = params()->param(0).value();
+  const double gamma = params()->param(1).value();
+
+  /// iterate over basis functions, given the constraints
+  for(int i=0;i<=ijk_max;i++)
+    for(int j=0;j<=ijk_max-i;j++)
+      for(int k=0;k<=ijk_max-i-j;k++) {
+	if (i > ij_max || j > ij_max || k > k_max || (i+j+k < ijk_min))
+	  continue;
+        
+	PrimBF pbf(i,j,k,alpha,alpha,gamma);
+	ContrBF cbf(pbf);
+	add(cbf);
+      }
+
+}
+
+void
 SymmGSHBasisSet::param(unsigned int i, const Parameter& p)
 {
   // update the parameter
@@ -139,11 +160,27 @@ SymmGSHBasisSet::param(unsigned int i, const Parameter& p)
 
 ////
 
-SymmGSHBasisSet
-hyller::operator^(const SymmGSHBasisSet& bs1,
-		  const SymmGSHBasisSet& bs2)
+Ptr<GSHBasisSet>
+hyller::operator^(const OrbitalBasisSet& bs1,
+		  const OrbitalBasisSet& bs2)
 {
-  const double alpha = bs1.params()->param(0).value() + bs2.params()->param(0).value();
-  const double gamma = bs1.params()->param(1).value() + bs2.params()->param(1).value();
-  SymmGSHBasisSet bs(alpha,gamma);
+  const double alpha = bs1.zeta();
+  const double beta = bs2.zeta();
+  const double gamma = 0.0;
+  Ptr<GSHBasisSet> bs(new GSHBasisSet(alpha,beta,gamma,false,false,false));
+
+  const unsigned int norbs1 = bs1.nbf();
+  const unsigned int norbs2 = bs2.nbf();
+  for(unsigned int o1=0; o1<norbs1; ++o1) {
+    const Orbital& orb1 = bs1.bf(o1);
+    for(unsigned int o2=0; o2<norbs2; ++o2) {
+      const Orbital& orb2 = bs2.bf(o2);
+
+      typedef GSHBasisSet::ContrBF ContrBF;
+      bs->add(ContrBF(orb1^orb2));
+
+    }
+  }
+
+  return bs;
 }

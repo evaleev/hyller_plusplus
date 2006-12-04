@@ -20,13 +20,13 @@ namespace hyller {
 #include <basebasisset_typedefs.h>
 
     GSHBasisSet(double alpha, double beta, double gamma, bool mutable_alpha = true, bool mutable_beta = true, bool mutable_gamma = true);
-    virtual ~GSHBasisSet();
+    ~GSHBasisSet();
 
-    // overloads BasisSet::add. Applies parameter constraints described above
+    /// overloads BasisSet::add. Applies parameter constraints described above
     void add(const ContrBF& bf);
 
   protected:
-    // overloads PSet::param()
+    /// overloads PSet::param()
     void param(unsigned int i, const Parameter& p);
 
   };
@@ -42,11 +42,14 @@ namespace hyller {
     SymmGSHBasisSet(double alpha, double gamma, bool mutable_alpha = true, bool mutable_gamma = true);
     ~SymmGSHBasisSet();
 
-    // overloads GSHBasisSet::add. Applies parameter constraints described above
+    /// overloads GSHBasisSet::add. Applies parameter constraints described above
     void add(const ContrBF& bf);
+    /** create a basis set including all functions subject to constraints
+     */
+    void add(int ijk_max, int ijk_min, int ij_max, int k_max);
 
   protected:
-    // overloads PSet::param()
+    /// overloads PSet::param()
     void param(unsigned int i, const Parameter& p);
 
   };
@@ -54,6 +57,11 @@ namespace hyller {
   /// Outer product of 2 basis sets is a set of every pairwise product
   SymmGSHBasisSet operator^(const SymmGSHBasisSet& bs1,
 			    const SymmGSHBasisSet& bs2);
+
+  class OrbitalBasisSet;
+  /// Outer product of 2 basis sets is a set of every pairwise product
+  Ptr<GSHBasisSet> operator^(const OrbitalBasisSet& bs1,
+			     const OrbitalBasisSet& bs2);
 
 };
 

@@ -1,4 +1,6 @@
 
+2006-11-13	Moller-Plesset code only lacks the exchange operator.
+
 2006-10-16	Implemented crude Newton-Raphson optimizer. Introduced Clock to create timestamps
 		which automate the process of recomputing.
 

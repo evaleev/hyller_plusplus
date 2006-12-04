@@ -9,17 +9,23 @@ namespace hyller {
 
   /// An orbital function of type r^n e^(-zeta*r). Spin not included (see class SD)
   struct Orbital {
-    /// a dummy orbital
-    Orbital();
+  public:
+    static Orbital Identity;
     /// Construct an orbital
     Orbital(int n, double zeta);
     ~Orbital() {}
 
     int n;
     double zeta;
+  private:
+    /// an identity function
+    Orbital();
   };
 
   bool operator==(const Orbital& I, const Orbital& J);
+
+  /** return I(1) * J(1) */
+  Orbital operator*(const Orbital& I, const Orbital& J);
 
   /// Orbital basis set -- includes orbitals with same zeta and n in (n_min, n_max)
   class OrbitalBasisSet {
@@ -52,14 +58,16 @@ namespace hyller {
    */
   class OrbitalWfn {
   public:
-    OrbitalWfn(const OrbitalBasisSet& bs, const std::vector<double>& coefs);
+    OrbitalWfn(const OrbitalBasisSet& bs, const std::vector<double>& coefs, double E);
     ~OrbitalWfn() {}
 
     const OrbitalBasisSet& basis() const { return bs_; }
     const std::vector<double>& coefs() const { return coefs_; }
+    double E() const { return E_; }
   private:
     const OrbitalBasisSet& bs_;
     std::vector<double> coefs_;
+    double E_;
   };
 
   class HylleraasBasisSet;

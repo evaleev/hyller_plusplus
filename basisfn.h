@@ -67,7 +67,7 @@ namespace hyller {
     }
 
     /// Will return false if the order of primitives is not the same
-    bool operator==(const ContractedBasisFunction& A)
+    bool operator==(const ContractedBasisFunction& A) const
     {
       const unsigned int nt = n();
       if (nt != A.n()) return false;
@@ -129,6 +129,27 @@ namespace hyller {
       }
       return result;
     }
+  /// Returns a product of 1 contracted function and 1 primitive function
+  template <typename BF>
+    ContractedBasisFunction<BF> operator*(const BF& A,
+					  const ContractedBasisFunction<BF>& B)
+    {
+      typedef ContractedBasisFunction<BF> CBF;
+      typedef typename CBF::ContrTerm Term;
+      CBF result;
+      const unsigned int nb = B.n();
+      for(unsigned int j=0; j<nb; ++j) {
+	const Term& tb = B.term(j);
+	result.add(A*tb.first,tb.second);
+      }
+      return result;
+    }
+  /// Returns a product of 1 contracted function and 1 primitive function
+  template <typename BF>
+    ContractedBasisFunction<BF> operator*(const ContractedBasisFunction<BF>& B,
+					  const BF& A) {
+    return A*B;
+  }
   /// Returns an outer product of 2 contracted functions
   template <typename BF, typename bf1, typename bf2>
     ContractedBasisFunction<BF> operator^(const ContractedBasisFunction<bf1>& A,

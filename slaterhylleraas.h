@@ -130,10 +130,10 @@ namespace hyller {
     gen_r1r2r12_oper(int i, int j, int k);
 
   class Orbital;
-  /// a product of 2 1-particle functions can be represented as a GenSlaterHylleraasBasisFunction
+  /** return I(1) * J(2) */
   GenSlaterHylleraasBasisFunction
-    operator^(const Orbital& f1,
-	      const Orbital& f2);
+    operator^(const Orbital& I,
+	      const Orbital& J);
 
   template <typename T> class Wavefunction;
 
