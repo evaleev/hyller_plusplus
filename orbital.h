@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <stdexcept>
+#include <cmath>
 
 namespace hyller {
 
@@ -17,6 +18,10 @@ namespace hyller {
 
     int n;
     double zeta;
+
+    /// value at (r,theta,phi)
+    double value_at(double r) const { return std::pow(r,(double)n) * std::exp(-zeta*r); }
+
   private:
     /// an identity function
     Orbital();

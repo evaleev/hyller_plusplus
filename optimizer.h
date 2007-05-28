@@ -2,6 +2,8 @@
 #ifndef _hyller_optimizer_h_
 #define _hyller_optimizer_h_
 
+#include <iostream>
+
 #define DIAG_HESSIAN 0
 #define USE_SYMM_MIX_DERIV 1
 

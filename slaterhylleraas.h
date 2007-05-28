@@ -4,6 +4,7 @@
 
 #include "coords.h"
 #include <vector>
+#include <cmath>
 
 namespace hyller {
 
@@ -115,6 +116,13 @@ namespace hyller {
     double gamma;
 
     std::string to_string() const;
+
+    /// compute value at r1,r2,r12
+    double value_at(double r1, double r2, double r12) {
+      using std::pow; using std::exp;
+      return pow(r1,(double)i) * pow(r2,(double)j) * pow(r12,(double)k) *
+	exp(-alpha*r1 - beta*r2 - gamma*r12);
+    }
   };
 
   /// Comparison operator

@@ -160,6 +160,28 @@ SymmGSHBasisSet::param(unsigned int i, const Parameter& p)
 
 ////
 
+Ptr<SymmGSHBasisSet>
+hyller::operator^(const SymmGSHBasisSet& bs1,
+		  const SymmGSHBasisSet& bs2)
+{
+  typedef SymmGSHBasisSet Basis;
+  const double alpha = bs1.params()->param(0).value() + bs2.params()->param(0).value();
+  const double gamma = bs1.params()->param(1).value() + bs2.params()->param(1).value();
+
+  Ptr<SymmGSHBasisSet> bs(new SymmGSHBasisSet(alpha,gamma,false,false));
+  const unsigned int nbf1 = bs1.nbf();
+  const unsigned int nbf2 = bs2.nbf();
+  for(unsigned int bf1=0; bf1<nbf1; ++bf1) {
+    const Basis::ContrBF& f1 = bs1.bf(bf1);
+    for(unsigned int bf2=0; bf2<nbf2; ++bf2) {
+      const Basis::ContrBF f2 = bs2.bf(bf2);
+      bs->add(f1 * f2);
+    }
+  }
+
+  return bs;
+}
+
 Ptr<GSHBasisSet>
 hyller::operator^(const OrbitalBasisSet& bs1,
 		  const OrbitalBasisSet& bs2)

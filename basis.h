@@ -200,7 +200,6 @@ namespace hyller {
     std::vector<ContrData> coefs_;
   };
 
-
   template <typename BS> class Wavefunction;
   class GenSlaterHylleraasBasisSet;
 

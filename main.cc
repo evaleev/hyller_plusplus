@@ -27,6 +27,8 @@
 #include <optimizer.h>
 #include <mollerplesset.h>
 #include <mollerplesset.timpl.h>
+#include <integrate.h>
+#include <product_ansatz.h>
 
 using namespace hyller;
 
@@ -297,12 +299,18 @@ int main(int argc, char **argv)
 #endif
 
   // Test generic energy evaluator
-  //test_gen_energy();
+  test_gen_energy();
 
 #if !SKIP_HF
   // Test MPn series
   test_mpn(hfwfn);
 #endif
+
+  // test the numerical integrator
+  //test_integrator();
+
+  // test the triproduct ansatz
+  //test_triproduct_ansatz();
 
 #endif // end of tests
 
@@ -1402,6 +1410,27 @@ void test_gen_energy()
   typedef SymmGSHBasisSet Basis;
 
 #if 0
+  // simplest 1-term XC wave function
+  gamma = 0.02;
+  bool mutable_gamma = (gamma == 0.0)?false:true;
+  mutable_gamma = false;
+  Ptr<Basis> bs(new Basis(alpha,gamma,true,mutable_gamma));
+
+  // Add e^(- zeta r_1 - zeta r_2 - gamma r_{12})
+  bs->add(GSH(0,0,0,alpha,alpha,gamma));
+#endif
+
+#if 1
+  // simple 2-term XC wave function
+  Ptr<Basis> bs(new Basis(alpha,0.0,true,false));
+
+  // Add e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,0,alpha,alpha,0.0));
+  // Add r_{12} e^(- zeta r_1 - zeta r_2)
+  bs->add(GSH(0,0,1,alpha,alpha,0.0));
+#endif
+
+#if 0
   // Hylleraas 3-term wave function
   Ptr<Basis> bs(new Basis(alpha,0.0,true,false));
 
@@ -1422,7 +1451,9 @@ void test_gen_energy()
 
 #if 0
   // Hylleraas 3-term analog with en exponential instead of r12
+  gamma = 0.10;
   bool mutable_gamma = (gamma == 0.0)?false:true;
+  //mutable_gamma = false;
   Ptr<Basis> bs(new Basis(alpha,gamma,true,mutable_gamma));
 
   // Add e^(- zeta r_1 - zeta r_2)
@@ -1631,7 +1662,7 @@ void test_gen_energy()
   }
 #endif
 
-#if 1
+#if 0
   gamma = 0.10;
   // my trial wave function: (1 + r1r2) (1 + r1 \dot r2) (1 + r_{12} e^{-\gamma r_{12}})
   Ptr<Basis> bs(new Basis(alpha,gamma,true,false));

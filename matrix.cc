@@ -147,26 +147,34 @@ double normConst(const Orbital& bf)
 // overlap of two one-electron basis functions
 double S(const Orbital& bfi, const Orbital& bfj)
 {
-  const double zeta = bfi.zeta;
-  double overlap = normConst(bfi) * normConst(bfj) * I(2.0*zeta,bfi.n+bfj.n+2);
+  double overlap = normConst(bfi) * normConst(bfj) * I(bfi.zeta + bfj.zeta,bfi.n+bfj.n+2);
   return overlap;
 }
 
 // nuclear attraction over two one-electron basis functions
 double V_en(const Orbital& bfi, const Orbital& bfj)
 {
-  const double zeta = bfi.zeta;
-  double v_ne = normConst(bfi) * normConst(bfj) * I(2.0*zeta,bfi.n+bfj.n+1);
+  double v_ne = normConst(bfi) * normConst(bfj) * I(bfi.zeta + bfj.zeta,bfi.n+bfj.n+1);
   return v_ne;
 }
 
 // kinetic energy over two one-electron basis functions
 double T(const Orbital& bfi, const Orbital& bfj)
 {
+#if 0
   const double zeta = bfi.zeta;
   const double twoz = 2.0 * zeta;
   const int ipj = bfi.n + bfj.n;
   double t = zeta*zeta*I(twoz,ipj+2) - 2.0*(bfj.n+1)*zeta*I(twoz,ipj+1) + (bfj.n+1)*bfj.n*I(twoz,ipj);
+  t *= -0.5 * normConst(bfi) * normConst(bfj);
+  return t;
+#endif
+
+  const double izeta = bfi.zeta;
+  const double jzeta = bfj.zeta;
+  const double ijzeta = izeta + jzeta;
+  const int ipj = bfi.n + bfj.n;
+  double t = izeta*jzeta*I(ijzeta,ipj+2) - 2.0*(bfj.n+1)*jzeta*I(ijzeta,ipj+1) + (bfj.n+1)*bfj.n*I(ijzeta,ipj);
   t *= -0.5 * normConst(bfi) * normConst(bfj);
   return t;
 }

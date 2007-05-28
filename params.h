@@ -107,6 +107,20 @@ namespace hyller {
 
   };
 
+  // makes parameter p mutable
+  template <typename T> void make_mutable(ParameterSet<T>& pset, unsigned int p) {
+    typedef ParameterSet<T> PSet;
+    typedef typename PSet::Parameter P;
+    typedef typename P::Type PValue;
+    if (p >= pset.n())
+      throw std::runtime_error("hyller::make_mutable(pset,p) -- requested parameter does not exist");
+    
+    const P& param_old = pset.param(p);
+    const PValue val = param_old.value();
+    const P param_new(val,true);
+    pset.param(p,param_new);
+  }
+
   /** RefParameterSet refers to parameters owned by someone else. managing parameters via param() member functions is
       someone else's. */
   template <typename P>
