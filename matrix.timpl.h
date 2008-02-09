@@ -56,7 +56,7 @@ namespace hyller {
     return result;
   }
 
-  /** Matrix element of the kinetic energy operator over unnormalized functions expressed in (r1,r2,r12) coordinates. See IJQC 101, 246 (2004). */
+  /** Matrix element of the kinetic energy operator over unnormalized functions expressed in (r1,r2,r12) coordinates. See IJQC 101, 246 (2005). */
   template <typename F>
     double T_R1R2R12(const F& bra, const F& ket) {
 
