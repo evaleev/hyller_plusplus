@@ -1,5 +1,6 @@
 
 #include <stdexcept>
+#include <algorithm>
 #include "hylleraas.h"
 #include "except.h"
 

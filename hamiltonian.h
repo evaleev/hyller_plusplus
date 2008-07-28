@@ -13,7 +13,7 @@ namespace hyller {
   public:
     typedef B BasisSet;
     typedef typename BasisSet::PrimBF BF;
-    typedef Overlap<BasisSet> Overlap;
+    typedef hyller::Overlap<BasisSet> Overlap;
     typedef typename BasisSet::RefPSet ParamSet;
     typedef PFunction<double**, ParamSet> parent;
 

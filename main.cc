@@ -7,6 +7,9 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <libpsio/psio.h>
+#include <libchkpt/chkpt.h>
+
 #include "defines.h"
 #include "includes.h"
 #include "polynom.h"
@@ -27,8 +30,6 @@
 #include <optimizer.h>
 #include <mollerplesset.h>
 #include <mollerplesset.timpl.h>
-#include <integrate.h>
-#include <product_ansatz.h>
 
 using namespace hyller;
 
@@ -128,14 +129,17 @@ int main(int argc, char **argv)
   if (!lmax_given) { l_max = nlm_max; }
   if (!mmax_given) { m_max = nlm_max; }
   
-  errcode = psi_start(num_extra_args, extra_args, 0);
+  errcode = psi_start(&infile, &outfile, &psi_file_prefix, num_extra_args, extra_args, 0);
   if (errcode != PSI_RETURN_SUCCESS) {
     fprintf(stderr,"init_io -- psi_start failed");
     exit(1);
   }
   
   ip_cwk_add(":HYLLERAAS");
+  psio_init(); psio_ipv1_config();
+  chkpt_init(PSIO_OPEN_OLD);
   tstart(outfile);
+  
   fprintf(outfile,"-----------------------------------------------------------------------------\n\n");
   fprintf(outfile,"\t\t\tHYLLERAAS-TYPE CI EXPANSION\n\n");
   errcode = ip_data("MULT","%d",&mult,0);
@@ -314,10 +318,10 @@ int main(int argc, char **argv)
 
 #endif // end of tests
 
+  chkpt_close();
+  psio_done();
   tstop(outfile);
-  ip_done();
-  fclose(outfile);
-  fclose(infile);
+  psi_stop(infile,outfile,psi_file_prefix);
 }                          /* end of main() */
 
 extern "C" char *gprgid()

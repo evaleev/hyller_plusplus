@@ -1,4 +1,5 @@
 
+#include <algorithm>
 #include "determinant.h"
 #include "except.h"
 

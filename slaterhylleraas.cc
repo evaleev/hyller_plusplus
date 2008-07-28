@@ -1,6 +1,7 @@
 
 #include <stdexcept>
 #include <sstream>
+#include <algorithm>
 #include "slaterhylleraas.h"
 #include "except.h"
 #include <orbital.h>

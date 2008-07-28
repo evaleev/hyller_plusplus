@@ -5,6 +5,7 @@
 #include "coords.h"
 #include <vector>
 #include <cmath>
+#include <string>
 
 namespace hyller {
 

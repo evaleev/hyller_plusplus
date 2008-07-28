@@ -206,13 +206,13 @@ namespace hyller {
   /// Describes traits of various BasisSet<T> instantiations
   template <typename BS>
     struct BasisSetTraits {
-      typedef Wavefunction<BS> Wavefunction;
+      typedef hyller::Wavefunction<BS> Wavefunction;
       /// No parameters by default
       static const int nparam = 0;
     };
   template <>
     struct BasisSetTraits< BasisSet<GenSlaterHylleraasBasisSet> > {
-      typedef Wavefunction< BasisSet<GenSlaterHylleraasBasisSet> > Wavefunction;
+      typedef hyller::Wavefunction< BasisSet<GenSlaterHylleraasBasisSet> > Wavefunction;
       /// 2 parameters: alpha and gamma
       static const int nparam = 2;
     };
