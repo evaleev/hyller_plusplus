@@ -1,7 +1,7 @@
 #
 # The MPQC section
 #
-SCCONFIG = /Users/evaleev/Development/workspace/mpqc-install/bin/sc-config
+SCCONFIG = /Users/evaleev/Development/workspace/install/mpqc-gcc/bin/sc-config
 CXX := $(shell $(SCCONFIG) --cxx)
 CXXFLAGS := $(shell $(SCCONFIG) --cxxflags)
 CPPFLAGS := $(shell $(SCCONFIG) --cppflags)
@@ -17,11 +17,8 @@ CXXDEPEND = $(CXX)
 OBJSUF = o
 
 # site-specific variables loaded first
-#PSIROOT = /home/evaleev/Development/psi3/recent/x86-linux-gcc41
-PSIROOT = /Users/evaleev/Development/workspace/psi3-install
-#GSLPATH = /usr/local
-GSLPATH = /opt/local
-BOOSTPATH = /opt/local
+GSLPATH = /usr/local
+BOOSTPATH = /Users/evaleev/Development/boost/install
 BOOSTINCLUDE = $(BOOSTPATH)/include
 BOOSTLIB = $(BOOSTPATH)/lib
 
@@ -31,11 +28,12 @@ vpath %.a $(PSIROOT)/lib
 #BLAS =  -L/usr/local/LAPACK -L/usr/local/ATLAS/lib/Linux_IntelCore -llapack -lf77blas -latlas 
 BLAS = /System/Library/Frameworks/vecLib.framework/vecLib
 #LIBS = -lPSI_ciomr -lPSI_ipv1 -lgsl -lgslcblas $(BLAS) -lm
-LIBS = $(MPQCLIBS) -lPSI_ciomr -lPSI_ipv1 -lgsl $(BLAS) -lm
+LIBS = $(MPQCLIBS) -lPSI_ciomr -lPSI_ipv1 $(GSLPATH)/lib/libgsl.dylib $(BLAS) -lm
 #FLIBS = -L/usr/lib/gcc/i386-redhat-linux/4.1.1 -L/usr/lib/gcc/i386-redhat-linux/4.1.1/../../.. -lgfortranbegin -lgfortran -lm -lgcc_s
 FLIBS =
-LIBDIR = $(MPQCLIBDIR) -L$(PSIROOT)/lib -L$(GSLPATH)/lib
-INCLUDES = -I$(PSIROOT)/include -I$(GSLPATH)/include/gsl -I$(BOOSTINCLUDE) -I.
+LIBDIR = $(MPQCLIBDIR)
+INCLUDES = -I$(GSLPATH)/include/gsl -I$(BOOSTINCLUDE) -I.
+CPPFLAGS += $(INCLUDES)
 
 CXXSRC = main.cc matrix.cc polynom.cc misc.cc hylleraas.cc slaterhylleraas.cc orbital.cc \
 projector.cc determinant.cc csf.cc except.cc gsh_basissets.cc clock.cc fock.cc

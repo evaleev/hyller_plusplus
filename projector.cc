@@ -255,3 +255,82 @@ GenHylleraas_2_Hylleraas::GenHylleraas_2_Hylleraas(const GenHylleraasBasisSet& g
   fprintf(outfile,"\t Hylleraas functions (in rows) expressed in terms of GenHylleraas functions\n");
   print_mat(X_,nhyll,nghyll,outfile);
 }
+
+GenHylleraas_2_Hylleraas::~GenHylleraas_2_Hylleraas() {
+}
+
+////
+
+GSH_2_Hylleraas::GSH_2_Hylleraas(const HylleraasBasisSet& hbs) :
+  gshbs_(make_gshbs(hbs)), hbs_(hbs)
+{
+  const int ngsh = gshbs_.num_bf();
+  const int nhyll = hbs_.num_bf();
+  fprintf(outfile, "\n\tNumber of GenSlaterHylleraas  = %d\n", ngsh);
+  fprintf(outfile, "\n\tNumber of Hylleraas = %d\n", nhyll);
+
+  // expansion coefficient for Hylleraas in terms of GSH
+  X_ = block_matrix(nhyll, ngsh);
+
+  // contributions from i,j functions
+  std::vector< std::vector<double> > ijcoeff(hbs_.nlm_max()+1);
+  for (int i = 0; i <= hbs_.nlm_max(); i++) {
+    ijcoeff.at(i).resize(hbs_.nlm_max()+1);
+  }
+
+  for (int k = 0; k < nhyll; ++k) {
+    const HylleraasBasisFunction& h = hbs_.bf(k);
+    for (int i = 0; i <= h.n + h.l; i++) {
+      for (int j = 0; j <= h.n + h.l; j++) {
+        ijcoeff.at(i).at(j) = 0.0;
+      }
+    }
+    const double hnorm = normConst(h) * pow(h.zeta, 2.5 + 0.5 * h.nlm()) * pow(h.zeta/2.0, -1.5 *  (h.nlm())) * pow(2.0 * M_PI, h.nlm());
+    abort();
+    for (int i1 = 0; i1 <= h.n; i1++) {
+      for (int i2 = 0; i2 <= h.l; i2++) {
+        GenSlaterHylleraasBasisFunction g(i1 + i2, h.n + h.l - i1 - i2,
+                                          h.m, h.zeta/2, h.zeta/2, 0.0);
+        ijcoeff.at(i1 + i2).at(h.n + h.l - i1 - i2) += binomial(h.n, i1)
+            * binomial(h.l, i2) * pow(-1.0, h.l - i2) * NormConst(g) / hnorm;
+      }
+    }
+
+    for (int i = 0; i <= h.n + h.l; i++) {
+      for (int j = 0; j <= h.n + h.l; j++) {
+        GenSlaterHylleraasBasisFunction g(i, j, h.m, h.zeta/2.0, h.zeta/2.0, 0.0);
+        const int ii = gshbs_.find(g);
+        X_[k][ii] = ijcoeff.at(i).at(j);
+      }
+    }
+
+  }
+  fprintf(
+      outfile,
+      "\t Hylleraas functions (in rows) expressed in terms of GenHylleraas functions\n");
+  print_mat(X_, nhyll, ngsh, outfile);
+}
+
+GSH_2_Hylleraas::~GSH_2_Hylleraas() {
+}
+
+GenSlaterHylleraasBasisSet
+GSH_2_Hylleraas::make_gshbs(const HylleraasBasisSet& hbs) {
+  const int nhyll = hbs.num_bf();
+  int ijk_max = 0;
+  int ijk_min = 1000000000;
+  int ij_max  = 0;
+  int k_max  = 0;
+  for(int bf=0; bf<nhyll; ++bf) {
+    const int ij = hbs.bf(bf).n + hbs.bf(bf).l;
+    const int k = hbs.bf(bf).m;
+    ij_max = std::max(ij_max, ij);
+    k_max = std::max(k_max, k);
+    ijk_min = std::min(ijk_min, ij+k);
+  }
+  ijk_max = ij_max + k_max;
+  GenSlaterHylleraasBasisSet result(ijk_max, ijk_min, ij_max, k_max, hbs.zeta()/2.0, hbs.zeta()/2.0, 0.0);
+  return result;
+}
+
+

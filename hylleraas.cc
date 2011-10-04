@@ -1,8 +1,11 @@
 
 #include <stdexcept>
 #include <algorithm>
+#include <cmath>
+#include <iomanip>
 #include "hylleraas.h"
 #include "except.h"
+#include "matrix.h"
 
 using namespace hyller;
 
@@ -12,10 +15,76 @@ HylleraasBasisFunction::HylleraasBasisFunction() :
 HylleraasBasisFunction::HylleraasBasisFunction(int nn, int ll, int mm, double zz) :
   n(nn), l(ll), m(mm), zeta(zz) { if (zeta <= 0.0) throw std::runtime_error("HylleraasBasisFunction::HylleraasBasisFunction -- nonpositive zeta"); }
 
+std::string
+HylleraasBasisFunction::to_string() const {
+  std::ostringstream oss;
+  if (n != 0) {
+    oss << "(r1+r2)^" << n << " * ";
+  }
+  if (l != 0) {
+    oss << "(r1-r2)^" << l << " * ";
+  }
+  if (m != 0) {
+    oss << "r12^" << m;
+    if (zeta != 0.0)
+      oss << " * ";
+  }
+
+  if (zeta == 0.0)
+    return oss.str();
+  else {
+    oss << "Exp[ -" << std::setprecision(15) << zeta/2.0 << "*(r1+r2)]";
+  }
+
+  return oss.str();
+}
+
+std::string
+HylleraasBasisFunction::to_C_string() const {
+  std::ostringstream oss;
+  if (n != 0) {
+    oss << "pow(r1+r2," << n << ")*";
+  }
+  if (l != 0) {
+    oss << "pow(r1-r2," << l << ")*";
+  }
+  if (m != 0) {
+    oss << "pow(r12," << m << ")";
+    if (zeta != 0.0)
+      oss << " * ";
+  }
+
+  if (zeta == 0.0)
+    return oss.str();
+  else {
+    oss << "exp( -" << std::setprecision(15) << zeta/2.0 << "*(r1+r2))";
+  }
+
+  return oss.str();
+}
+
+
 bool
 hyller::operator==(const HylleraasBasisFunction& A, const HylleraasBasisFunction& B)
 {
   return (A.n==B.n && A.l==B.l && A.m==B.m && A.zeta==B.zeta);
+}
+
+namespace hyller {
+template<>
+double value_at<HylleraasBasisFunction>(const HylleraasBasisFunction& bf,
+             double r1, double r2, double r12) {
+  const double s = r1+r2;
+  const double t = r1-r2;
+  const double u = r12;
+  double value;
+  if (bf.m == -1 && u == 0.0) // special case: m=-1 && r12=0 cancel out 0 (l is guaranteed nonzero in this case)
+    value = normConst(bf) * pow(s,bf.n) * pow(t,bf.l-1) * exp(- bf.zeta * s / 2.0);
+  else // default case
+    value = normConst(bf) * pow(s,bf.n) * pow(t,bf.l) * pow(u,bf.m) * exp(- bf.zeta * s / 2.0);
+
+  return value;
+}
 }
 
 ////
@@ -103,6 +172,42 @@ HylleraasWfn::HylleraasWfn(const HylleraasBasisSet& bs, const std::vector<double
 {
   if (bs_.num_bf() != coefs_.size())
     throw std::runtime_error("HylleraasWfn::HylleraasWfn -- size of basis set and coefficient vector do not match");
+}
+
+std::string
+HylleraasWfn::to_string() const {
+  const size_t nbf = bs_.num_bf();
+  std::ostringstream oss;
+  if (nbf) {
+    oss << std::setprecision(15) << coefs_[0] * normConst(bs_.bf(0)) * pow(bs_.bf(0).zeta, bs_.bf(0).nlm()+3) << " * "
+        << bs_.bf(0).to_string();
+    for(int f=1; f<nbf; ++f) {
+      oss << " ";
+      if (coefs_[f] > 0.0)
+        oss << " + ";
+      oss << std::setprecision(15) << coefs_[f] * normConst(bs_.bf(f)) * pow(bs_.bf(f).zeta, bs_.bf(f).nlm()+3)   << " * "
+          << bs_.bf(f).to_string() << " " << std::endl;
+    }
+  }
+  return oss.str();
+}
+
+std::string
+HylleraasWfn::to_C_string() const {
+  const size_t nbf = bs_.num_bf();
+  std::ostringstream oss;
+  if (nbf) {
+    oss << std::setprecision(15) << coefs_[0] << " * "
+        << bs_.bf(0).to_C_string();
+    for(int f=1; f<nbf; ++f) {
+      oss << " ";
+      if (coefs_[f] > 0.0)
+        oss << " + ";
+      oss << std::setprecision(15) << coefs_[f] << " * "
+          << bs_.bf(f).to_C_string() << " " << std::endl;
+    }
+  }
+  return oss.str();
 }
 
 ////

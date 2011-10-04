@@ -5,6 +5,7 @@
 #include "determinant.h"
 #include "csf.h"
 #include "hylleraas.h"
+#include "slaterhylleraas.h"
 
 namespace hyller {
 
@@ -68,6 +69,25 @@ namespace hyller {
     const GenHylleraasBasisSet& gbs_;
     const HylleraasBasisSet& hbs_;
     double** X_;
+  };
+
+  /// Projector from GenSlaterHylleraas to Hylleraas
+  class GSH_2_Hylleraas {
+  public:
+    GSH_2_Hylleraas(const HylleraasBasisSet& hbs);
+    ~GSH_2_Hylleraas();
+
+    /// Returns Hylleraas functions expanded in GenSlaterHylleraas functions
+    double** X() const { return X_; }
+
+    const GenSlaterHylleraasBasisSet& gsh_basis() const { return gshbs_; }
+
+  private:
+    const GenSlaterHylleraasBasisSet gshbs_;
+    const HylleraasBasisSet& hbs_;
+    double** X_;
+
+    static GenSlaterHylleraasBasisSet make_gshbs(const HylleraasBasisSet& hbs);
   };
 
 };

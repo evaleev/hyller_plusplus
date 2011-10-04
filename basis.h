@@ -67,19 +67,19 @@ namespace hyller {
       const unsigned int np = bf.n();
       ContrData cdata;
       for(unsigned int p=0; p<np; ++p) {
-	const ContrTerm& t = bf.term(p);
-	PrimBF p = t.first;
-	typename PrimBFSet::const_iterator pend = prims_.end();
-	typename PrimBFSet::const_iterator piter = std::find(prims_.begin(),prims_.end(),p);
-	unsigned int pabs;
-	if (piter == pend) {
-	  pabs = prims_.size();
-	  prims_.push_back(p);
-	}
-	else {
-	  pabs = piter - prims_.begin();
-	}
-	cdata.push_back(std::make_pair(pabs,t.second));
+        const ContrTerm& t = bf.term(p);
+        PrimBF primbf = t.first;
+        typename PrimBFSet::const_iterator pend = prims_.end();
+        typename PrimBFSet::const_iterator piter = std::find(prims_.begin(),prims_.end(),primbf);
+        unsigned int pabs;
+        if (piter == pend) {
+          pabs = prims_.size();
+          prims_.push_back(primbf);
+        }
+        else {
+          pabs = piter - prims_.begin();
+        }
+        cdata.push_back(std::make_pair(pabs,t.second));
       }
       coefs_.push_back(cdata);
     }

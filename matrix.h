@@ -144,4 +144,6 @@ namespace hyller {
 
 }
 
+#include <matrix.timpl.h>
+
 #endif

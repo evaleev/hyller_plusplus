@@ -19,11 +19,12 @@ hylleraas:(
    %zopt = true
    %zeta = 3.64
    %zeta = 3.375
-   zeta= 3.7
+   %zeta= 3.6
    %zeta = 1.0
+   zeta = 3.63214
    charge = 2.0
 
-   cusp_plot = false
+   %cusp_plot = true
    radius = 1.0
    np_cusp = 100
    psinorm = false

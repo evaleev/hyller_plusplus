@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <stdexcept>
+#include <sstream>
 #include <cmath>
 
 namespace hyller {
@@ -21,6 +22,12 @@ namespace hyller {
 
     /// value at (r,theta,phi)
     double value_at(double r) const { return std::pow(r,(double)n) * std::exp(-zeta*r); }
+
+    std::string to_string() const {
+      std::ostringstream oss;
+      oss << "r^" << n << " * exp(-" << zeta << "*r)";
+      return oss.str();
+    }
 
   private:
     /// an identity function

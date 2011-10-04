@@ -3,11 +3,16 @@
 #define _hyller_hylleraas_h_
 
 #include <vector>
+#include <string>
 #include "spin.h"
 
 namespace hyller {
 
-  /// A single-exponent Hylleraas-type basis function
+  template <typename TwoElectronBasisFunction>
+  double value_at(const TwoElectronBasisFunction& bf, double r1, double r2, double r12);
+
+  /// A single-exponent Hylleraas-type basis function:
+  /// \f$ (r_1+r_2)^n (r_1-r_2)^l r_{12}^m e^{- \zeta (r_1 + r_2)} \f$
   struct HylleraasBasisFunction {
     /// Construct a dummy function
     HylleraasBasisFunction();
@@ -17,10 +22,13 @@ namespace hyller {
     int n;
     int l;
     int m;
-    // zeta is not necessary at the moment, but may be useful in the future
     double zeta;
 
+    std::string to_string() const;
+    std::string to_C_string() const;
+
     int nlm() const { return n+l+m; }
+
   };
 
   /// Comparison operator
@@ -29,6 +37,7 @@ namespace hyller {
   /// A Hylleraas-type basis set
   class HylleraasBasisSet {
   public:
+    typedef HylleraasBasisFunction BasisFunction;
     /// Constructs a Hylleraas-type basis set, given the parameters and restrictions
     HylleraasBasisSet(bool singlet, int nlm_max, int nlm_min, int n_max, int l_max, int m_max, double zeta);
     ~HylleraasBasisSet() {}
@@ -71,11 +80,16 @@ namespace hyller {
    */
   class HylleraasWfn {
   public:
+    typedef HylleraasBasisSet Basis;
     HylleraasWfn(const HylleraasBasisSet& bs, const std::vector<double>& coefs);
     ~HylleraasWfn() {}
 
     const HylleraasBasisSet& basis() const { return bs_; }
     const std::vector<double> coefs() const { return coefs_; }
+
+    std::string to_string() const;
+    std::string to_C_string() const;
+
   private:
     const HylleraasBasisSet& bs_;
     std::vector<double> coefs_;

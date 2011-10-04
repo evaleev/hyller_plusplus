@@ -203,7 +203,7 @@ namespace hyller {
       double** Xinv = block_matrix(indDim,nbf);
       mmult(X,1,S,0,Xinv,0,indDim,nbf,nbf,0);
       free_block(Sp);
-      free_block(S);
+      //free_block(S);
       fflush(outfile);
 
       //
@@ -237,7 +237,7 @@ namespace hyller {
 
       // convert to orthogonal basis
       double** H = UtVU(X,Hc,nbf,indDim);
-      free_block(Hc);
+      //free_block(Hc);
       fprintf(outfile,"  -Hamiltonian matrix in orthogonal basis\n");
       print_mat(H,indDim,indDim,outfile);
 
@@ -248,24 +248,42 @@ namespace hyller {
       free_block(H);
       /* Test - prints out all roots */
       for(int i=0;i<=root_num;i++)
-	fprintf(outfile,"\tState #%d  E = %3.12lf\n",i+1,evals[i]);
+	fprintf(outfile,"\tState #%d  E = %15.12lf\n",i+1,evals[i]);
       const double E = evals[root_num];
       
       for(int i=0;i<indDim;i++) /* temporarily putting eigenvector to evals array */
-	evals[i] = evecs[i][root_num];
+        evals[i] = evecs[i][root_num];
       free_block(evecs);
 	
+      // back-transform the coefficients to the contracted (non-normalized) basis
       for(int i=0;i<nbf;i++) {
-	double c = 0.0;
-	for(int j=0;j<indDim;j++)
-	  c += Xinv[j][i]*evals[j];
-	evec[i] = c;
+        double c = 0.0;
+        for(int j=0;j<indDim;j++)
+          //c += Xinv[j][i]*evals[j];
+          c += X[i][j]*evals[j];
+        evec[i] = c;
       }
 	
       free_block(X);
       free_block(Xinv);
-	
-      Wfn* wfn = new Wfn(basis,evec);
+
+#if 0
+      /* Test - recompute energy as an expectation value */
+      {
+        double stest = 0.0;
+        for(int r=0; r<nbf; ++r)
+          for(int c=0; c<nbf; ++c)
+            stest += S[r][c] * evec[r] * evec[c];
+        fprintf(outfile,"\tTEST: recomputed S = %15.12lf\n",stest);
+        double etest = 0.0;
+        for(int r=0; r<nbf; ++r)
+          for(int c=0; c<nbf; ++c)
+            etest += Hc[r][c] * evec[r] * evec[c];
+        fprintf(outfile,"\tTEST: recomputed E = %15.12lf\n",etest);
+      }
+#endif
+
+      Wfn* wfn = new Wfn(basis,evec,E);
       return *wfn;
     }
 

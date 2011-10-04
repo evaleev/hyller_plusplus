@@ -6,6 +6,7 @@
 #include <sstream>
 #include <algorithm>
 #include <utility>
+#include <iomanip>
 
 namespace hyller {
 
@@ -72,7 +73,7 @@ namespace hyller {
       const unsigned int nt = n();
       if (nt != A.n()) return false;
       for(int t=0; t<nt; ++t) {
-	if (contr_[t] != A.contr_[t]) return false;
+        if (contr_[t] != A.contr_[t]) return false;
       }
       return true;
     }
@@ -81,10 +82,29 @@ namespace hyller {
       std::ostringstream oss;
       const unsigned int nt = n();
       if (nt) {
-	oss << "  " << contr_[0].second << " * " << contr_[0].first.to_string() << std::endl;	
-	for(unsigned int t=1; t<nt; ++t) {
-	  oss << "+ " << contr_[t].second << " * " << contr_[t].first.to_string() << std::endl;
-	}
+        oss << "  " << contr_[0].second << " * " << contr_[0].first.to_string() << std::endl;
+        for(unsigned int t=1; t<nt; ++t) {
+          oss << "+ " << contr_[t].second << " * " << contr_[t].first.to_string() << std::endl;
+        }
+      }
+      return oss.str();
+    }
+
+    std::string to_C_string(bool skip_exponential) const {
+      std::ostringstream oss;
+      const unsigned int nt = n();
+      if (nt) {
+        oss << " ( ";
+        if (contr_[0].second != 1.0)
+          oss << std::setprecision(15) << contr_[0].second << " * ";
+        oss << contr_[0].first.to_C_string(skip_exponential) << std::endl;
+        for(unsigned int t=1; t<nt; ++t) {
+          oss << "+ ";
+          if (contr_[t].second != 1.0)
+            oss << std::setprecision(15) << contr_[t].second << " * ";
+          oss << contr_[t].first.to_C_string(skip_exponential) << std::endl;
+        }
+        oss << " ) " << std::endl;
       }
       return oss.str();
     }

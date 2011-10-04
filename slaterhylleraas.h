@@ -117,6 +117,7 @@ namespace hyller {
     double gamma;
 
     std::string to_string() const;
+    std::string to_C_string(bool skip_exponential = false) const;
 
     /// compute value at r1,r2,r12
     double value_at(double r1, double r2, double r12) {
@@ -155,7 +156,8 @@ namespace hyller {
     typedef Wavefunction<GenSlaterHylleraasBasisSet> Wfn;
 
     /// Constructs a generalized Slater-Hylleraas-type basis set, given the parameters and restrictions
-    GenSlaterHylleraasBasisSet(int ijk_max, int ijk_min, int ij_max, int k_max, double alpha, double beta, double gamma);
+    GenSlaterHylleraasBasisSet(int ijk_max, int ijk_min, int ij_max, int k_max, double alpha, double beta, double gamma, bool odd_k=true);
+    GenSlaterHylleraasBasisSet(const GenSlaterHylleraasBasisSet&);
     ~GenSlaterHylleraasBasisSet() {}
 
     /// maximum i+j+k value

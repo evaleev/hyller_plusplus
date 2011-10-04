@@ -85,24 +85,25 @@ namespace hyller {
       free_block(Ho);
       /* Test - prints out all roots */
       for(int i=0;i<=root_;i++)
-	fprintf(outfile,"\tState #%d  E = %3.12lf\n",i+1,evals[i]);
+        fprintf(outfile,"\tState #%d  E = %3.12lf\n",i+1,evals[i]);
       const double E = evals[root_];
       
       for(int i=0;i<indDim;i++) /* temporarily putting eigenvector to evals array */
-	evals[i] = evecs[i][root_];
+        evals[i] = evecs[i][root_];
       free_block(evecs);
 	
       for(int i=0;i<nbf;i++) {
-	double c = 0.0;
-	for(int j=0;j<indDim;j++)
-	  c += Xinv[j][i]*evals[j];
-	evec[i] = c;
+        double c = 0.0;
+        for(int j=0;j<indDim;j++)
+          //c += Xinv[j][i]*evals[j];
+          c += X[i][j]*evals[j];
+        evec[i] = c;
       }
 
       fprintf(outfile,"\t-Eigenvector for root %d:\n", root_);
       for(int i=0; i<nbf; i++)
-	fprintf(outfile,"\t%3d  %20.12lf\n",i+1,evec[i]);
-      
+        fprintf(outfile,"\t%3d  %20.12lf\n",i+1,evec[i]);
+
       free_block(X);
       free_block(Xinv);
 	

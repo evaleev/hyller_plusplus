@@ -50,8 +50,11 @@ GSHBasisSet::add(const ContrBF& bf)
   const unsigned int np = bf.n();
   for(unsigned int p=0; p<np; ++p) {
     const ContrTerm& t = bf.term(p);
+#define ALLOW_DIFFERENT_EXPONENTS 1
+#if !ALLOW_DIFFERENT_EXPONENTS
     if (!gsh::primbf_params_ok(params(),t.first))
       throw InvalidBasisFunctionParams();
+#endif
   }
   TopBaseBasisSet::add(bf);
 }
@@ -113,8 +116,11 @@ SymmGSHBasisSet::add(const ContrBF& bf)
   const unsigned int np = bf.n();
   for(unsigned int p=0; p<np; ++p) {
     const ContrTerm& t = bf.term(p);
+#define ALLOW_DIFFERENT_EXPONENTS 1
+#if !ALLOW_DIFFERENT_EXPONENTS
     if (!symmgsh::primbf_params_ok(params(),t.first))
       throw InvalidBasisFunctionParams();
+#endif
   }
   TopBaseBasisSet::add(bf);
 }
