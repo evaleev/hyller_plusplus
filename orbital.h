@@ -67,9 +67,11 @@ namespace hyller {
 
   /**
      Is a wave vector in subspace of Hilbert space supported by the basis
+
    */
   class OrbitalWfn {
   public:
+    /// @params coefs  coefficients of unit-normalized basis functions
     OrbitalWfn(const OrbitalBasisSet& bs, const std::vector<double>& coefs, double E);
     ~OrbitalWfn() {}
 
@@ -89,7 +91,9 @@ namespace hyller {
 
   template <typename BF> class ContractedBasisFunction;
   /// Convert an OrbitalWfn to a contracted basis function
-  ContractedBasisFunction<Orbital> contract(const OrbitalWfn&);
+  /// @param use_normalized_primitives if set to true, coefficients will be reported in terms of normalized primitives
+  ContractedBasisFunction<Orbital> contract(const OrbitalWfn&,
+                                            bool use_normalized_primitives = false);
 
 };
 

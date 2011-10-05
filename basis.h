@@ -22,6 +22,7 @@ namespace hyller {
       parameters are changed.
   */
   template <class PBF, class P = double> class BasisSet : public ParameterSet< Variable<P> >, public EnablePtrFromThis< BasisSet<PBF,P> > {
+    typedef BasisSet<PBF,P> this_type;
   public:
     typedef PBF PrimBF;
     typedef P ParamValue;
@@ -155,6 +156,13 @@ namespace hyller {
 	oss << "    Prim #" << p << std::endl << prim(p).to_string();
       }
       return oss.str();
+    }
+
+    Ptr<this_type> uncontracted() const {
+      Ptr<this_type> result(new this_type);
+      for(unsigned int p=0; p<this->nprim(); ++p)
+        result->add(this->prim(p));
+      return result;
     }
 
   protected:

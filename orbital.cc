@@ -96,9 +96,9 @@ hyller::orbital_to_hylleraas(const Orbital& I, const Orbital& J, const Hylleraas
   return X;
 }
 
-
 ContractedBasisFunction<Orbital>
-hyller::contract(const OrbitalWfn& wfn)
+hyller::contract(const OrbitalWfn& wfn,
+                 bool use_normalized_primitives)
 {
   const OrbitalBasisSet& basis = wfn.basis();
   const std::vector<double>& coefs = wfn.coefs();
@@ -107,7 +107,8 @@ hyller::contract(const OrbitalWfn& wfn)
   for(int f=0; f<nbf; ++f) {
     const Orbital& O = basis.bf(f);
     // The product is in terms of non-normalized functions
-    result.add(O,coefs[f]*normConst(O));
+    result.add(O,coefs[f] * (use_normalized_primitives ? 1.0 : normConst(O))
+               );
   }
   return result;
 }

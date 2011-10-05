@@ -30,6 +30,7 @@
 #include <optimizer.h>
 #include <mollerplesset.h>
 #include <mollerplesset.timpl.h>
+#include <r12geminal.h>
 
 using namespace hyller;
 
@@ -1061,7 +1062,6 @@ hyll_hf_overlap(const HylleraasWfn& hywfn,
     std::cout << "Optimized wave function:" << std::endl
               << gshwfn->to_C_string(false) << std::endl;
 
-#if 1
     // Compute the overlap between HF and Hylleraas wave functions
     {
       // S matrix in between the primitive bases of HF and Hylleraas wave functions
@@ -1086,57 +1086,15 @@ hyll_hf_overlap(const HylleraasWfn& hywfn,
       S /= (4.0 * M_PI);
       std::cout << "HF/Hyll overlap = " << S << std::endl;
     }
-    // Compute the overlap between HF and f(r12)|HF>
-    {
-      // S matrix in the primitive basis of HF wfn
-      double** Sp;
-      const int nprim_hf = phi0.n();
-      Sp = block_matrix(nprim_hf, nprim_hf);
-      for (int i = 0; i < nprim_hf; i++) {
-        const GSH& bfi = phi0.term(i).first;
-        for (int j = 0; j < nprim_hf; j++) {
-          const GSH& bfj = phi0.term(j).first;
-          Sp[i][j] = hyller::S(bfi, bfj);
-        }
-      }
 
-      double S = 0.0;
-      for (int i = 0; i < nprim_hf; i++) {
-        for (int j = 0; j < nprim_hf; j++) {
-          S += Sp[i][j] * phi0.term(i).second * phi0.term(j).second;
-        }
-      }
-      S /= (16.0 * M_PI * M_PI);
-      std::cout << "HF/HF overlap = " << S << std::endl;
-    }
-    // Compute the overlap between HF and f(r12)|HF>
+    // create and print out the R12 geminal from this Hartree-Fock wave function
     {
-      BasisSet<GSH> f12bs;
-      f12bs.add(phi0 * GenSlaterHylleraasBasisFunction(0,0,0,0.0,0.0,2.0));
-      // S matrix in between the primitive bases of HF and f(r12)|HF> wave functions
-      double** Sp;
-      const int nprim_hf = phi0.n();
-      const int nprim_f12 = f12bs.nprim();
-      Sp = block_matrix(nprim_hf, nprim_f12);
-      for (int i = 0; i < nprim_hf; i++) {
-        const GSH& bfi = phi0.term(i).first;
-        for (int j = 0; j < nprim_f12; j++) {
-          const GSH& bfj = f12bs.prim(j);
-          Sp[i][j] = hyller::S(bfi, bfj);
-        }
-      }
-
-      double** f12coefs = f12bs.coefs();
-      double S = 0.0;
-      for (int i = 0; i < nprim_hf; i++) {
-        for (int j = 0; j < nprim_f12; j++) {
-          S += Sp[i][j] * phi0.term(i).second * f12coefs[j][0];
-        }
-      }
-      S /= (16.0 * M_PI * M_PI);
-      std::cout << "HF/f12/HF overlap = " << S << std::endl;
+      const double gamma = 0.5;
+      Ptr<OrbitalWfn> hfwfn_ptr(new OrbitalWfn(hfwfn));
+      R12Geminal<BasisSet<GSH> > r12geminal(hfwfn_ptr,
+                                            GenSlaterHylleraasBasisFunction(0,0,0,0.0,0.0,gamma),
+                                            -1.0/gamma);
     }
-#endif
   }
 
 }
