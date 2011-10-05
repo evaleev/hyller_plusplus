@@ -32,6 +32,8 @@ namespace hyller {
     ContractedBasisFunction() {}
     /// Contraction contains a single function
     ContractedBasisFunction(const PrimBF& a) : contr_(ContrTermSet(1,std::make_pair(a,1.0))) {}
+    /// Contraction contains a single function, with a coefficient
+    ContractedBasisFunction(const PrimBF& a, double coef) : contr_(ContrTermSet(1,std::make_pair(a,coef))) {}
     ~ContractedBasisFunction() {}
 
     /// Number of terms in the contraction
@@ -82,10 +84,11 @@ namespace hyller {
       std::ostringstream oss;
       const unsigned int nt = n();
       if (nt) {
-        oss << "  " << contr_[0].second << " * " << contr_[0].first.to_string() << std::endl;
+        oss << "  " << std::fixed << std::setprecision(20) << contr_[0].second << " * " << contr_[0].first.to_string();
         for(unsigned int t=1; t<nt; ++t) {
-          oss << "+ " << contr_[t].second << " * " << contr_[t].first.to_string() << std::endl;
+          oss << " + " << std::fixed << std::setprecision(20) << contr_[t].second << " * " << contr_[t].first.to_string();
         }
+        oss << std::endl;
       }
       return oss.str();
     }

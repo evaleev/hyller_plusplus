@@ -157,28 +157,30 @@ std::string
 GenSlaterHylleraasBasisFunction::to_string() const {
   std::ostringstream oss;
   if (i != 0) {
-    oss << "r_1^" << i << " * ";
+    oss << "r1^" << i << " * ";
   }
   if (j != 0) {
-    oss << "r_2^" << j << " * ";
+    oss << "r2^" << j << " * ";
   }
   if (k != 0) {
-    oss << "r_{12}^" << k << " * ";
+    oss << "r12^" << k;
   }
   
   if (alpha == 0.0 && beta == 0.0 && gamma == 0.0)
     return oss.str();
   else {
-    oss << "e^{";
+    if (k != 0)
+      oss << " *";
+    oss << " Exp[ ";
   }
   
   if (alpha != 0.0)
-    oss << "-" << alpha << "*r_1";
+    oss << "-" << std::fixed << std::setprecision(20) << alpha << "*r1";
   if (beta != 0.0)
-    oss << "-" << beta << "*r_2";
+    oss << "-" << std::fixed << std::setprecision(20) << beta << "*r2";
   if (gamma != 0.0)
-    oss << "-" << gamma << "*r_{12}";
-  oss << "}";
+    oss << "-" << std::fixed << std::setprecision(20) << gamma << "*r12";
+  oss << " ]";
   return oss.str();
 }
 
