@@ -8,6 +8,7 @@
 
 namespace hyller {
 
+  /// Computes overlap matrix in basis B
   template <typename B>
     class Overlap : public PFunction<double**, typename B::RefPSet> {
   public:
@@ -71,6 +72,7 @@ namespace hyller {
 
   };
 
+  /// The nonsymmetric analog of Overlap, i.e. bra and ket basis sets are different @sa Overlap
   template <typename BraB, typename KetB>
     class NSOverlap : public PFunction<double**, typename BraB::RefPSet> {
   public:
