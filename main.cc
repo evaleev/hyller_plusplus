@@ -31,6 +31,7 @@
 #include <mollerplesset.h>
 #include <mollerplesset.timpl.h>
 #include <r12geminal.h>
+#include <grid.h>
 
 using namespace hyller;
 
@@ -66,6 +67,7 @@ namespace {
   void test_hf_2body(const OrbitalWfn& hfwfn);
   void test_gen_energy(double Z);
   void test_mpn(const OrbitalWfn& hfwfn);
+  void test_numerical_integrator();
 
   void hylleraas_oo();
 }
@@ -346,7 +348,7 @@ int main(int argc, char **argv)
 #endif
 
   // test the numerical integrator
-  //test_integrator();
+  test_numerical_integrator();
 
   // test the triproduct ansatz
   //test_triproduct_ansatz();
@@ -2625,6 +2627,80 @@ hylleraas_oo() {
 #endif
   solvOOCi(f_bs, 1.81607, 6, 2.0);
   //solvOOCi(f_bs, 0.9, 4, 1.0);
+}
+
+void
+test_numerical_integrator() {
+
+  typedef GenSlaterHylleraasBasisFunction GSH;
+  typedef SymmGSHBasisSet Basis;
+
+  for(int wfntype = 1; wfntype < 2; ++wfntype) {
+
+    // uncorrelated wave function
+    const double alpha = (wfntype == 0) ? 1.6875 : 1.81607;
+    const double Z = 2.0;
+
+    Ptr<Basis> bs(new Basis(alpha,0.0,true,false));
+
+    // Add e^(- zeta r_1 - zeta r_2)
+    bs->add(GSH(0,0,0,alpha,alpha,0.0));
+    if (wfntype == 1) {
+      // Add r_{12} e^(- zeta r_1 - zeta r_2)
+      bs->add(GSH(0,0,1,alpha,alpha,0.0));
+      // Add (r_1^2 + r_2^2 - 2 r_1 r_2) e^(- zeta r_1 - zeta r_2)
+      {
+        typedef BasisSet<GSH>::ContrBF BF;
+        BF bf;
+        bf.add(GSH(2,0,0,alpha,alpha,0.0),+1.0);
+        bf.add(GSH(0,2,0,alpha,alpha,0.0),+1.0);
+        bf.add(GSH(1,1,0,alpha,alpha,0.0),-2.0);
+        bs->add(bf);
+      }
+    }
+
+    // we'll use this Hamiltonian ...
+    typedef TwoBodyHamiltonian<Basis> Hamiltonian;
+    const double Ckin = 1.0;
+    const double Cne = 1.0;
+    const double Cee = 1.0;
+    Ptr<Hamiltonian> h(new Hamiltonian(bs,Z,Ckin,Cne,Cee));
+    // to get energy variationally ...
+    typedef EigenEnergy<Hamiltonian> Energy;
+    Ptr<Energy> energy(new Energy(0,h));
+    (*energy)();
+    // and optimize (basis set) parameters using Newton-Raphson method
+    typedef NewtonRaphsonOptimizer<Energy> Optimizer;
+    Ptr<Optimizer> optimizer(new Optimizer(energy,1e-9,1e-3,1000));
+    optimizer->optimize();
+    std::cout << "Optimized wave function:" << std::endl
+              << energy->wfn()->to_C_string(false) << std::endl;
+
+    // compute the norm of the wave function
+    double** S = h->overlap()->matrix();
+    const int nbf = bs->nbf();
+    const std::vector<double>& coefs = energy->wfn()->coefs();
+    double wfnnorm2 = 0.0;
+    for(int i=0; i<nbf; ++i) {
+      for(int j=0; j<=i; ++j) {
+        wfnnorm2 += (i==j ? 1.0 : 2.0) * S[i][j] * coefs[i] * coefs[j];
+      }
+    }
+    std::cout << "wfnnorm2 = " << wfnnorm2 << std::endl;
+
+    // test the grid integrator
+    int npts_rad[] = {32, 64, 128, 256};
+    int npts_ang[] = {38, 74, 146, 302, 590, 1202};
+    for(int ir=0; ir<5; ++ir) {
+      for(int ia=0; ia<7; ++ia) {
+        NIntegrate<Energy::Wavefunction> integrator(*(energy->wfn()), npts_rad[ir], npts_ang[ia]);
+        double norm2;
+        integrator.compute(norm2);
+        std::cout << "NIntegrate<Wfn>::compute: npts=(" << npts_rad[ir] << "," << npts_ang[ia] << ")  norm = "
+                  << sc::scprintf("%25.15lf",norm2/wfnnorm2) << std::endl;
+      }
+    }
+  }
 }
 
 };

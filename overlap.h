@@ -26,6 +26,7 @@ namespace hyller {
     }
 
     const Ptr<BasisSet>& basis() const { return basis_; }
+    double** matrix() const { return matrix_; }
 
   private:
     Ptr<BasisSet> basis_;

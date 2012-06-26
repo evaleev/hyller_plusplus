@@ -54,6 +54,10 @@ namespace hyller {
         r12phi0 *= corrfac_prefactor_;
         r12bs->add(r12phi0);
 
+        // wrap 1/r12 |0> into a basis
+        Ptr<Basis> v12bs(new Basis);
+        v12bs->add(PrimBF(0,0,-1,0.0,0.0,0.0) * phi0);
+
         // verify that |0> is normalized
         Ptr<Overlap<Basis> > S00(new Overlap<Basis>(hfbs));
         double** s00_mat = (*S00)();
@@ -135,7 +139,7 @@ namespace hyller {
           std::cout << "\\hat{O}_2 |R12> function:" << std::endl
                     << O2r12wfn.to_string() << std::endl;
 
-#if 0
+#if 1
           { // test these functions <R12|\hat{O}_1 \hat{O}_2|R12> = <0|R12>^2
             Ptr<Basis> O1r12wfn_bs(new Basis);
             O1r12wfn_bs->add(O1r12wfn);
@@ -155,7 +159,46 @@ namespace hyller {
               print_mat(Stmp_mat,1,1,stdout);
             }
           }
+
 #endif
+
+          // compute <0|1/r12 \\hat{Q}_{12} |R12>
+          {
+            // compute <0|V12|0>
+            double s0V0 = 0.0;
+            {
+              Ptr<NSOverlap<Basis, Basis> > s(
+                  new NSOverlap<Basis, Basis>(hfbs, v12bs));
+              double** s_mat = (*s)();
+              s0V0 = s_mat[0][0];
+              std::cout << "<0|1/r12|0> = " << s0V0 << std::endl;
+            }
+
+            // compute <R12|V12|0>
+            double sRV0 = 0.0;
+            {
+              Ptr<NSOverlap<Basis, Basis> > s(
+                  new NSOverlap<Basis, Basis>(r12bs, v12bs));
+              double** s_mat = (*s)();
+              sRV0 = s_mat[0][0];
+              std::cout << "<0|1/r12|R12> = " << sRV0 << std::endl;
+            }
+
+            // compute <R12|\hat{O}_1 V12|0>
+            double sRVQ10 = 0.0;
+            {
+              Ptr<Basis> O1r12wfn_bs(new Basis);
+              O1r12wfn_bs->add(O1r12wfn);
+              Ptr<NSOverlap<Basis, Basis> > s(
+                  new NSOverlap<Basis, Basis>(O1r12wfn_bs, v12bs));
+              double** s_mat = (*s)();
+              sRVQ10 = s_mat[0][0];
+              std::cout << "<0|1/r12 \\hat{Q}_1 |R12> = " << sRVQ10 << std::endl;
+            }
+
+            std::cout << "<0|1/r12 \\hat{Q}_{12} |R12> = " << (sRV0 + sR0 * s0V0 - 2.0 * sRVQ10) << std::endl;
+          }
+
         }
 
       }

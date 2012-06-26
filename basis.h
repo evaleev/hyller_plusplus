@@ -58,7 +58,7 @@ namespace hyller {
       typename ContrBFSet::const_iterator result = std::find(bfs_.begin(),bfs_.end(),bf);
       typename ContrBFSet::const_iterator bend = bfs_.end();
       if (result != bend)
-	return;
+        return;
 
       bfs_.push_back(bf);
 

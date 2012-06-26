@@ -197,6 +197,19 @@ namespace hyller {
       return result;
     }
 
+    template<typename BF>
+    double value_at(const ContractedBasisFunction<BF>& bf,
+                    double r1, double r2, double r12) {
+      typedef ContractedBasisFunction<BF> CBF;
+      typedef typename CBF::ContrTerm Term;
+      double value = 0.0;
+      for(unsigned int i=0; i<bf.n(); ++i) {
+        const Term& term = bf.term(i);
+        value += term.second * value_at(term.first, r1, r2, r12) / NormConst(term.first);
+      }
+      return value;
+    }
+
 };
 
 #endif

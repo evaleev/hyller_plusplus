@@ -17,6 +17,7 @@ namespace hyller {
   class GSHBasisSet : public BasisSet<GenSlaterHylleraasBasisFunction,double> {
   public:
     typedef BasisSet<GenSlaterHylleraasBasisFunction,double> BaseBasisSet;
+    typedef BaseBasisSet::ContrBF BasisFunction;
 #include <basebasisset_typedefs.h>
 
     GSHBasisSet(double alpha, double beta, double gamma, bool mutable_alpha = true, bool mutable_beta = true, bool mutable_gamma = true);
@@ -37,6 +38,7 @@ namespace hyller {
   class SymmGSHBasisSet : public GSHBasisSet {
   public:
     typedef GSHBasisSet BaseBasisSet;
+    typedef GSHBasisSet::BasisFunction BasisFunction;
 #include <basebasisset_typedefs.h>
 
     SymmGSHBasisSet(double alpha, double gamma, bool mutable_alpha = true, bool mutable_gamma = true);
