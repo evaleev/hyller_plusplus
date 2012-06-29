@@ -52,11 +52,16 @@ namespace hyller {
         double weight1_rad;
         const double r1 = integrator_rad_->radial_value(ir1, npts_rad_, radius,
                                                         weight1_rad);
-        const int npts_ang = integrator_ang_->num_angular_points(r1, ir1);
+
+        const bool assume_S_state = true; // change to false to do brute-force non-spherical integration
+        const int npts_ang = assume_S_state ? 1 : integrator_ang_->num_angular_points(r1, ir1);
         for(int ia1=0; ia1<npts_ang; ++ia1) {
           sc::SCVector3 xyz1;
-          const double weight1_ang = integrator_ang_->angular_point_cartesian(ia1, r1,
-                                                                              xyz1);
+          if (assume_S_state)
+            xyz1 = sc::SCVector3(0.0, 0.0, r1);
+          const double four_pi = 4.0 * M_PI;
+          const double weight1_ang = assume_S_state ? four_pi :
+              integrator_ang_->angular_point_cartesian(ia1, r1, xyz1);
 
           const double weight1 = weight1_rad * weight1_ang;
 

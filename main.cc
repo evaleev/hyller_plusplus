@@ -2689,10 +2689,10 @@ test_numerical_integrator() {
     std::cout << "wfnnorm2 = " << wfnnorm2 << std::endl;
 
     // test the grid integrator
-    int npts_rad[] = {32, 64, 128, 256};
+    int npts_rad[] = {32, 64, 128, 256, 512};
     int npts_ang[] = {38, 74, 146, 302, 590, 1202};
     for(int ir=0; ir<5; ++ir) {
-      for(int ia=0; ia<7; ++ia) {
+      for(int ia=0; ia<6; ++ia) {
         NIntegrate<Energy::Wavefunction> integrator(*(energy->wfn()), npts_rad[ir], npts_ang[ia]);
         double norm2;
         integrator.compute(norm2);
